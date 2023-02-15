@@ -7,6 +7,7 @@ trait DNSQuery {
     // ** TODO dig 依存を外す。
     $ns = \domain_ns( $name );
     $cmd = "dig '${name}' ${type} +short @{$ns}";
+    //dump($cmd);
     $content = `{$cmd}`;
     $content = str_replace( '"', '', trim( $content ) );
     return $content;

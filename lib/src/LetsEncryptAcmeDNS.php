@@ -4,7 +4,7 @@ namespace Takuya\LEClientDNS01;
 
 use Takuya\LEClientDNS01\PKey\AsymmetricKey;
 use Takuya\LEClientDNS01\PKey\CSRSubject;
-use Takuya\LEClientDNS01\Delegators\LetsEncryptAcme;
+use Takuya\LEClientDNS01\Delegators\AcmePHPWrapper;
 use Takuya\LEClientDNS01\PKey\CertificateWithPrivateKey;
 use Takuya\LEClientDNS01\Delegators\DnsAPIForLEClient;
 
@@ -13,28 +13,48 @@ class LetsEncryptAcmeDNS {
   public function __construct (
     public string            $priv_key,
     public string            $owner_email,
-    public string            $domain_name,
+    protected array          $domain_names,
     public DnsAPIForLEClient $dns,
   ) {
+    $this->domain_names = $this->validateDomainName( $domain_names );
   }
   
-  public function orderNewCert ( $acme_uri = LetsEncryptAcme::STAGING ): CertificateWithPrivateKey {
+  protected function validateDomainName ( $domain_names ) {
+    empty( $domain_names ) && throw new \RuntimeException( 'DNS must not be empty.' );
+    rsort( $domain_names );
+    usort( $domain_names, function( $a, $b ) { return strlen( $a ) > strlen( $b ); } );
+    $base_name = $domain_names[0];
+    $same_origin = array_filter( $domain_names, function( $e ) use ( $base_name ) {
+      return str_contains( $e, $base_name );
+    } );
+    if ( sizeof( $domain_names ) !== sizeof( $same_origin ) ) {
+      throw new \RuntimeException( 'Currently, this Library only support SAME Origin.' );
+    }
+    return $domain_names;
+  }
+  
+  public function orderNewCert ( $acme_uri = AcmePHPWrapper::STAGING ): CertificateWithPrivateKey {
     // keys
     $owner_pky = new AsymmetricKey( $this->priv_key );
     // cert keys
     $domain_key = new AsymmetricKey();
-    $csr = $domain_key->csr( new CSRSubject( ...['commonName' => $this->domain_name] ) );
-    // dns updates
-    $cleanup_dns_callback = function( $name ) { $this->dns->removeTxtRecord( $name ); };
-    $dns_update_callback = function( $name, $content ) { $this->dns->changeDnsTxtRecord( $name, $content ); };
+    $dn = new CSRSubject( ...['commonName' => $this->domain_names[0], 'subjectAlternativeNames' => $this->domain_names] );
     
     // start lets encrypt ACMEv2 process
-    $cli = new LetsEncryptAcme( $owner_pky->privKey(), $acme_uri );
+    $cli = new AcmePHPWrapper( $owner_pky->privKey(), $acme_uri );
+    //
     $cli->newAccount( $this->owner_email );
-    $cli->startOderDnsChallenge( $this->domain_name, $dns_update_callback );
-    $cli->processVerifyDNSAuth( $this->domain_name, $cleanup_dns_callback );
-    $cli->finalizeOrderCertificate( $this->domain_name, $csr, $domain_key->privKey() );
-    // Get Result.
+    $cli->newOrder( $this->domain_names );
+    $challenges = $cli->getDnsChallenge();
+    $on_wait = function( ...$args ) { dump( '...wait for SOA NS update TXT.' ); };
+    //$on_wait = function( ...$args ) { dump( ['waiting',...$args]); };
+    foreach ( $challenges as $challenge ) {
+      $challenge->setDnsClient( $this->dns );
+      $challenge->start( $on_wait );
+    }
+    // finalize order.
+    $cli->finalizeOrderCertificate( $this->domain_names[0], $dn, $domain_key->privKey() );
+    //// Get Result.
     $ret = $cli->certificateLastIssued();
     $cert_and_a_key = new CertificateWithPrivateKey( $domain_key->privKey(), $ret['cert'], $ret['intermediate'] );
     return $cert_and_a_key;

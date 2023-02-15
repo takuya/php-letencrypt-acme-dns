@@ -11,7 +11,7 @@ class CSRSubject {
     public ?string $organizationName = null,
     public ?string $organizationalUnitName = null,
     public ?string $emailAddress = null,
-    public array   $subjectAlternativeNames = []
+    public array   $subjectAlternativeNames = []// openssl_csr_new will ignore this.
   ) {
   }
   

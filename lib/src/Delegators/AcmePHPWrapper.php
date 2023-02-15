@@ -15,15 +15,19 @@ use AcmePhp\Ssl\PrivateKey;
 use AcmePhp\Ssl\DistinguishedName;
 use AcmePhp\Ssl\CertificateRequest;
 use Takuya\LEClientDNS01\PKey\AsymmetricKey;
+use Takuya\LEClientDNS01\AcmeDns01Record;
+use AcmePhp\Core\Protocol\AuthorizationChallenge;
+use Takuya\LEClientDNS01\DNSChallengeTask;
+use Takuya\LEClientDNS01\PKey\CSRSubject;
 
-class LetsEncryptAcme {
+class AcmePHPWrapper {
   const STAGING = 'https://acme-staging-v02.api.letsencrypt.org/directory';
-  const ACME_PREFIX = "_acme-challenge";
   
   protected AsymmetricKey $owner_pkey;
   protected AcmeClient $acme_php;
   protected \AcmePhp\Ssl\CertificateResponse $certificateResponse;
-  protected array $last_challenge;
+  protected \AcmePhp\Core\Protocol\CertificateOrder $challenges;
+  protected \AcmePhp\Core\Protocol\CertificateOrder $order;
   
   public function __construct ( $user_private_key, $directory_url = self::STAGING ) {
     $this->owner_pkey = new AsymmetricKey( $user_private_key );
@@ -47,57 +51,56 @@ class LetsEncryptAcme {
     return $this->acme_php->registerAccount( $email );
   }
   
-  public function startOderDnsChallenge ( $domain_name, callable $dns_update = null ): void {
-    $challenge = $this->getDnsChallenge( $domain_name );
-    $dns01 = [];
-    $dns01['challenge'] = $challenge->toArray();
-    $dns01['acme']['domain'] = sprintf( "%s.%s", self::ACME_PREFIX, $dns01['challenge']['domain'] );
-    $dns01['acme']['content'] = \base64_url_encode( hash( 'sha256', $dns01['challenge']['payload'], true ) );
-    //
-    $dns_update( $dns01['acme']['domain'], $dns01['acme']['content'] );
-    $this->last_challenge = $dns01;
+  public function newOrder ( array $domain_names ): void {
+    $this->order = $this->acme_php->requestOrder( $domain_names );
   }
   
-  protected function getDnsChallenge ( $domain_name ) {
-    $challenges = $this->acme_php->requestAuthorization( $domain_name );
-    $found = null;
-    foreach ( $challenges as $challenge ) {
-      if ( $challenge->getType() == 'dns-01' ) {
-        $found = $challenge;
-        break;
+  public function getDnsChallenge () {
+    $challenges = $this->dnsChallengeInOrder();
+    $tasks = [];
+    foreach ( $challenges as $domain=>$item ) {
+      $tasks[$domain] = new DNSChallengeTask($item,$this);
+    }
+    return $tasks;
+  }
+  
+  
+  protected function dnsChallengeInOrder() {
+    $available_challenges = $this->order->getAuthorizationsChallenges();
+    $found = [];
+    // find dns-01 challenge.
+    foreach ($available_challenges as $challenges_per_domain){
+      foreach ( $challenges_per_domain as $item ) {
+        if ( $item->getType() == 'dns-01' ) {
+          $found[] = $item;
+        }
       }
     }
-    return $found;
-  }
-  
-  public function cleanUpDNS ( callable $dns_update ): void {
-  }
-  
-  public function processVerifyDNSAuth ( $domain_name, callable $dns_update ): array {
-    try {
-      $challenge = $this->getDnsChallenge( $domain_name );
-      $ret = $this->acme_php->challengeAuthorization( $challenge );
-    }catch (\Exception $e){
-      $dns_update( $this->last_challenge['acme']['domain'], $this->last_challenge['acme']['content'] );
-      throw $e;
-    } finally {
-      $dns_update( $this->last_challenge['acme']['domain'], $this->last_challenge['acme']['content'] );
+    // challenges by domain name;
+    $dns_challegens=[];
+    foreach ( $found as $item ) {
+      $dns_challegens[$item->getDomain()][]=$item;
     }
-    return $ret;
+    return $dns_challegens;
+  }
+  public function challengeAuthorization(AuthorizationChallenge $challenge ){
+    $ret = $this->acme_php->challengeAuthorization($challenge);
+    return $ret['status'] == 'valid';
   }
   
-  public function finalizeOrderCertificate ( $domain_name, \OpenSSLCertificateSigningRequest $csr,
+  
+  public function finalizeOrderCertificate ( $domain_name, CSRSubject $dn,
                                              $domain_private_key ): void {
-    // AcmePHP はCSRに手間が多い。
-    $dn = new DistinguishedName( ...openssl_csr_get_subject( $csr, false ) );
+    $acme_csr = $this->createCSR($dn,$domain_private_key);
+    $this->certificateResponse = $this->acme_php->finalizeOrder($this->order,$acme_csr);
+  }
+  protected function createCSR(CSRSubject $dn, $domain_private_key){
+    // AcmePHP はCSRに手間が多い。 openssl_csr_new がSAN 非対応のため。
+    $dn = new DistinguishedName( ...$dn->toArray() );
     $domain_pkey = new AsymmetricKey( $domain_private_key );
-    $keypair = new KeyPair(
-      new PublicKey( $domain_pkey->pubKey() ),
-      new PrivateKey( $domain_pkey->privKey() )
-    );
-    $csr = new CertificateRequest( $dn, $keypair );
-    
-    $this->certificateResponse = $this->acme_php->requestCertificate( $domain_name, $csr );
+    $keypair = new KeyPair( new PublicKey( $domain_pkey->pubKey() ),new PrivateKey( $domain_pkey->privKey() ) );
+    $acme_csr = new CertificateRequest( $dn, $keypair );
+    return $acme_csr;
   }
   
   public function certificateLastIssued (): array {
