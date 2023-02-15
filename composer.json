@@ -1,24 +1,38 @@
 {
-    "name": "takuya/php-letencrypt-cloudflare-dns",
-    "description": "acmev2 to letsencrypt by dns cloudflare",
-    "type": "library",
-    "license": "GPL-3.0-LATER",
-    "autoload": {
-        "psr-4": {
-            "Takuya\\PhpLetencryptCloudflareDns\\": "src/"
-        }
+  "name": "takuya/php-letencrypt-cloudflare-dns",
+  "description": "acmev2 to letsencrypt by dns cloudflare",
+  "type": "library",
+  "license": "GPL-3.0-LATER",
+  "autoload": {
+    "psr-4": {
+      "Takuya\\LEClientDNS01\\": "lib/src/"
     },
-    "authors": [
-        {
-            "name": "takuya",
-            "email": "55338+takuya@users.noreply.github.com"
-        }
-    ],
-    "minimum-stability": "stable",
-    "require": {
-        "cloudflare/sdk": "^1.3"
-    },
-    "require-dev": {
-        "phpunit/phpunit": "^10.0"
+    "files": [
+      "lib/helpers/domain_name_utils.php",
+      "lib/helpers/base64_safe.php"
+    ]
+
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "tests\\": "tests/"
     }
+  },
+  "authors": [
+    {
+      "name": "takuya",
+      "email": "55338+takuya@users.noreply.github.com"
+    }
+  ],
+  "minimum-stability": "stable",
+  "require": {
+    "cloudflare/sdk": "^1.3",
+    "acmephp/core": "^2.1",
+    "ext-openssl": "*"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^10.0",
+    "larapack/dd": "^1.1",
+    "takuya/php-random-string": "^0.1.0"
+  }
 }
