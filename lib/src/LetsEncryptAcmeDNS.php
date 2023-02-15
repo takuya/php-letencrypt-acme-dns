@@ -12,7 +12,6 @@ class LetsEncryptAcmeDNS {
   
   public function __construct (
     public string            $priv_key,
-    public string            $cloudflare_token,
     public string            $owner_email,
     public string            $domain_name,
     public DnsAPIForLEClient $dns,
