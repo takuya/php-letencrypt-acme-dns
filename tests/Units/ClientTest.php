@@ -23,7 +23,7 @@ class ClientTest extends TestCase {
     openssl_pkey_export( $pkey, $pkey_private_pem );
     $domain_name = "{$str}.{$base_domain}";
     $cf = new CloudflareDNSRecord( $cf_api_token, $domain_name );
-    $cli = new LetsEncryptAcmeDNS( $pkey_private_pem, $cf_api_token, $email, $domain_name, $cf );
+    $cli = new LetsEncryptAcmeDNS( $pkey_private_pem, $email, $domain_name, $cf );
     $cert = $cli->orderNewCert();
     $this->assertArrayHasKey( 'public_key', $cert->toArray() );
     $this->assertArrayHasKey( 'private_key', $cert->toArray() );

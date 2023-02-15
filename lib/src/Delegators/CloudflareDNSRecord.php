@@ -4,7 +4,7 @@ namespace Takuya\LEClientDNS01\Delegators;
 
 class CloudflareDNSRecord implements DnsAPIForLEClient {
   
-  use DNSQuery;
+  use DNSRecordUpdateWaiting;
   
   protected string $zone_id;
   protected \Cloudflare\API\Endpoints\DNS $cli;
@@ -29,7 +29,6 @@ class CloudflareDNSRecord implements DnsAPIForLEClient {
       'proxied' => false,
     ];
     $this->addRecord( ...$param );
-    sleep( 10 );// wait for cloudflare.
     $this->waitForUpdated( $domain, 'TXT', $content, fn() => dump( 'waiting' ) );
     return true;
   }
@@ -42,7 +41,7 @@ class CloudflareDNSRecord implements DnsAPIForLEClient {
     return true;
   }
   
-  public function isExists ( $name, $type ) {
+  public function isExists ( $name, $type ): bool {
     return sizeof( $this->findRecordIds( $name, $type ) ) > 0;
   }
   
@@ -82,12 +81,5 @@ class CloudflareDNSRecord implements DnsAPIForLEClient {
     return $result;
   }
   
-  public function waitForUpdated ( $name, $type, $content, callable $on_wait = null ): void {
-    $on_wait = $on_wait ?? function() { };
-    while ( !str_contains( $content, $this->query( $name, $type ) ) ) {
-      $on_wait();
-      sleep( 1 );
-    }
-  }
   
 }

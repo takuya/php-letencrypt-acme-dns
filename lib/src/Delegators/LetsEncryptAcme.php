@@ -74,9 +74,15 @@ class LetsEncryptAcme {
   }
   
   public function processVerifyDNSAuth ( $domain_name, callable $dns_update ): array {
-    $challenge = $this->getDnsChallenge( $domain_name );
-    $ret = $this->acme_php->challengeAuthorization( $challenge );
-    $dns_update( $this->last_challenge['acme']['domain'], $this->last_challenge['acme']['content'] );
+    try {
+      $challenge = $this->getDnsChallenge( $domain_name );
+      $ret = $this->acme_php->challengeAuthorization( $challenge );
+    }catch (\Exception $e){
+      $dns_update( $this->last_challenge['acme']['domain'], $this->last_challenge['acme']['content'] );
+      throw $e;
+    } finally {
+      $dns_update( $this->last_challenge['acme']['domain'], $this->last_challenge['acme']['content'] );
+    }
     return $ret;
   }
   
