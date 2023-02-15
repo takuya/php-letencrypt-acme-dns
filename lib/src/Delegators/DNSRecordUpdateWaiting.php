@@ -23,8 +23,8 @@ trait DNSRecordUpdateWaiting {
           throw new \RuntimeException( 'gave up waiting for dns updated.' );
         }
       }
-      //after primary NS updated, wait for LE resolver cache timeout.
-      sleep( 10 );
+      // After primary NS updated, wait for LE resolver.
+      sleep( 7 );
     } else {
       // wait 10 seconds will be enough for Cloudflare SOA primary NS and LE ACME Resolver.
       sleep( 10 );
