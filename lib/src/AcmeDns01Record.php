@@ -11,11 +11,11 @@ class AcmeDns01Record {
   ) {
   }
   
-  public function acme_domain_name () {
+  public function acme_domain_name (): string {
     return sprintf( "%s.%s", self::ACME_PREFIX, $this->domain );
   }
   
-  public function acme_content () {
+  public function acme_content (): string {
     return \base64_url_encode( hash( 'sha256', $this->payload, true ) );
   }
   

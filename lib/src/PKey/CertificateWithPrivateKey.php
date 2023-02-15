@@ -11,13 +11,13 @@ class CertificateWithPrivateKey {
   public function pubKey(){
     return ( new AsymmetricKey( $this->priv_key_pem ) )->pubKey();
   }
-  public function privKey(){
+  public function privKey(): string {
     return $this->priv_key_pem;
   }
-  public function cert(){
+  public function cert(): string {
     return $this->cert_pem;
   }
-  public function fullChain(){
+  public function fullChain(): string {
     $items = [$this->cert(),...$this->intermediates];
     return implode(PHP_EOL,$items);
   }

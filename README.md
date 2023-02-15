@@ -16,7 +16,7 @@ This is Pure php , for embedded to WEB PHP-App (ex. laravel).  **Independent** f
 $base_domain  = getenv( 'LE_SAMPLE_BASE_DOMAIN' );
 $cf_api_token = getenv( 'LE_SAMPLE_CLOUDFLARE_TOKEN' );
 $your_email   = getenv( 'LE_SAMPLE_EMAIL' );
-$domain_name  = ["www.your-domain.tld",'*.www.your-domain.com'];
+$domain_name  = ["www.your-domain.tld",'*.www.your-domain.tld'];
 $owner_pkey   = new AsymmetricKey();// user's pkey, not a domain cert  pkey.
 /** ********
  * Order certificate.

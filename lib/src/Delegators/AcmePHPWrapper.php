@@ -55,8 +55,11 @@ class AcmePHPWrapper {
     $this->order = $this->acme_php->requestOrder( $domain_names );
   }
   
-  public function getDnsChallenge () {
-    $challenges = $this->dnsChallengeInOrder();
+  /**
+   * @return DNSChallengeTask[]|array
+   */
+  public function getDnsChallenge (): array {
+    $challenges = $this->dnsChallengeInCertOrder();
     $tasks = [];
     foreach ( $challenges as $domain=>$item ) {
       $tasks[$domain] = new DNSChallengeTask($item,$this);
@@ -65,7 +68,7 @@ class AcmePHPWrapper {
   }
   
   
-  protected function dnsChallengeInOrder() {
+  protected function dnsChallengeInCertOrder(): array {
     $available_challenges = $this->order->getAuthorizationsChallenges();
     $found = [];
     // find dns-01 challenge.
@@ -76,12 +79,12 @@ class AcmePHPWrapper {
         }
       }
     }
-    // challenges by domain name;
-    $dns_challegens=[];
+    // store challenges by domain name;
+    $dns_challenges=[];
     foreach ( $found as $item ) {
-      $dns_challegens[$item->getDomain()][]=$item;
+      $dns_challenges[$item->getDomain()][]=$item;
     }
-    return $dns_challegens;
+    return $dns_challenges;
   }
   public function challengeAuthorization(AuthorizationChallenge $challenge ){
     $ret = $this->acme_php->challengeAuthorization($challenge);

@@ -47,13 +47,14 @@ class LetsEncryptAcmeDNS {
     $cli->newAccount( $this->owner_email );
     $cli->newOrder( $this->domain_names );
     $challenges = $cli->getDnsChallenge();
-    $on_wait = function( ...$args ) { dump( '...wait for SOA NS update TXT.' ); };
+    $on_wait = null;
+    //$on_wait = function( ...$args ) { dump( '...wait for SOA NS update TXT.' ); };
     //$on_wait = function( ...$args ) { dump( ['waiting',...$args]); };
     foreach ( $challenges as $challenge ) {
       $challenge->setDnsClient( $this->dns );
       $challenge->start( $on_wait );
     }
-    // finalize order.
+    // Finalize order.
     $cli->finalizeOrderCertificate( $this->domain_names[0], $dn, $domain_key->privKey() );
     //// Get Result.
     $ret = $cli->certificateLastIssued();

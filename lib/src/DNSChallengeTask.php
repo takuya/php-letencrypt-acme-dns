@@ -18,45 +18,46 @@ class DNSChallengeTask {
   protected array $challenges;
   protected AcmePHPWrapper $parent;
   
-  public function __construct (
-    
-    array $challenge,
-    AcmePHPWrapper $parent,
-  ) {
+  public function __construct ( array $challenge, AcmePHPWrapper $parent, ) {
     $this->challenges = $challenge;
     $this->parent = $parent;
     foreach ( $this->challenges as $item ) {
-      $this->records[] = new AcmeDns01Record($item->getDomain(), $item->getPayload());
+      $this->records[] = new AcmeDns01Record( $item->getDomain(), $item->getPayload() );
     }
   }
-  public function setDnsClient(DnsAPIForLEClient $dns){
+  
+  public function setDnsClient ( DnsAPIForLEClient $dns ): void {
     $this->dns = $dns;
   }
-  public function getRecords(){
+  
+  /**
+   * @return array|AcmeDns01Record[]
+   */
+  public function getRecords(): array {
     return $this->records;
   }
   
-  public function updateDNSRecord(){
+  protected function updateDNSRecord(): void {
     foreach ( $this->records as $record){
       $this->dns->addDnsTxtRecord($record->acme_domain_name(),$record->acme_content());
     }
   }
-  public function verifyDNS(){
+  protected function verifyDNS(): void {
     foreach ( $this->challenges as $challenge ) {
       $this->parent->challengeAuthorization($challenge);
     }
   }
-  public function waitDNS(callable $on_wait=null){
+  protected function waitDNS(callable $on_wait=null): void {
     foreach ( $this->records as $record){
       $this->dns->waitForUpdated($record->acme_domain_name(),'TXT',$record->acme_content(),$on_wait);
     }
   }
-  public function cleanUpDnsRecord(){
+  protected function cleanUpDnsRecord(): void {
     foreach ( $this->records as $record){
       $this->dns->removeTxtRecord($record->acme_domain_name(),$record->acme_content());
     }
   }
-  public function start(callable $on_wait=null){
+  public function start(callable $on_wait=null): void {
     try{
       $this->updateDNSRecord();
       $this->waitDNS($on_wait);

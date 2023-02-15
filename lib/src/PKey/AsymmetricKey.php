@@ -11,7 +11,7 @@ class AsymmetricKey {
     $this->pkey_private = $private_key_pem;
   }
   
-  public static function create_priv_key () {
+  public static function create_priv_key (): string {
     $pkey = openssl_pkey_new( ['private_key_type' => OPENSSL_KEYTYPE_RSA, 'private_key_bits' => 4096] );
     openssl_pkey_export( $pkey, $pkey_private_pem );
     return $pkey_private_pem;
@@ -28,17 +28,13 @@ class AsymmetricKey {
     return openssl_pkey_get_details( openssl_pkey_get_private( $this->pkey_private ) )['key'];
   }
   
-  public function csr ( CSRSubject $dn, $openssl_options = null ) {
-    return self::CertificateSigningRequest( $dn->toArray(), openssl_pkey_get_private( $this->privKey() ), $openssl_options );
-  }
-  
   public static function CertificateSigningRequest ( array $dn, \OpenSSLAsymmetricKey $private_key,
                                                      array $options = null,
                                                      array $extra = null ): \OpenSSLCertificateSigningRequest|bool {
     return openssl_csr_new( $dn, $private_key, $options, $extra );
   }
   
-  public function privKey () {
+  public function privKey (): string {
     openssl_pkey_export( $this->pkey_private, $pem );
     return $pem;
   }

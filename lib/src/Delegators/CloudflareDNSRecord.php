@@ -20,7 +20,6 @@ class CloudflareDNSRecord implements DnsAPIForLEClient {
     $this->cli = $dns;
   }
   public function addDnsTxtRecord ( $domain, $content ): bool {
-    //$this->removeTxtRecord( $domain );
     $param = [
       'type' => 'TXT',
       'name' => $domain,
