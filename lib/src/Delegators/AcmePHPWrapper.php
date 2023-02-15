@@ -21,7 +21,7 @@ use Takuya\LEClientDNS01\DNSChallengeTask;
 use Takuya\LEClientDNS01\PKey\CSRSubject;
 
 class AcmePHPWrapper {
-  const STAGING = 'https://acme-staging-v02.api.letsencrypt.org/directory';
+
   
   protected AsymmetricKey $owner_pkey;
   protected AcmeClient $acme_php;
@@ -29,12 +29,12 @@ class AcmePHPWrapper {
   protected \AcmePhp\Core\Protocol\CertificateOrder $challenges;
   protected \AcmePhp\Core\Protocol\CertificateOrder $order;
   
-  public function __construct ( $user_private_key, $directory_url = self::STAGING ) {
+  public function __construct ( $user_private_key, $directory_url = LetsEncryptServer::STAGING ) {
     $this->owner_pkey = new AsymmetricKey( $user_private_key );
     $this->acme_php = $this->initialize_acme_client( $directory_url );
   }
   
-  protected function initialize_acme_client ( $directory_url = self::STAGING ): AcmeClient {
+  protected function initialize_acme_client ( $directory_url = LetsEncryptServer::STAGING ): AcmeClient {
     $factory = new SecureHttpClientFactory(
       new GuzzleHttpClient(),
       new Base64SafeEncoder(),
