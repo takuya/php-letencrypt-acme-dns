@@ -7,6 +7,7 @@ use Takuya\LEClientDNS01\PKey\CSRSubject;
 use Takuya\LEClientDNS01\Delegators\AcmePHPWrapper;
 use Takuya\LEClientDNS01\PKey\CertificateWithPrivateKey;
 use Takuya\LEClientDNS01\Delegators\DnsAPIForLEClient;
+use Takuya\LEClientDNS01\Delegators\LetsEncryptServer;
 
 class LetsEncryptAcmeDNS {
   
@@ -33,7 +34,7 @@ class LetsEncryptAcmeDNS {
     return $domain_names;
   }
   
-  public function orderNewCert ( $acme_uri = AcmePHPWrapper::STAGING ): CertificateWithPrivateKey {
+  public function orderNewCert ( $acme_uri = LetsEncryptServer::STAGING ): CertificateWithPrivateKey {
     // keys
     $owner_pky = new AsymmetricKey( $this->priv_key );
     // cert keys
