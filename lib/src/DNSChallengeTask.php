@@ -4,7 +4,7 @@ namespace Takuya\LEClientDNS01;
 
 use AcmePhp\Core\Protocol\AuthorizationChallenge;
 use Takuya\LEClientDNS01\Delegators\AcmePHPWrapper;
-use Takuya\LEClientDNS01\Delegators\DnsAPIForLEClient;
+use Takuya\LEClientDNS01\Delegators\DnsPluginContract;
 
 
 class DNSChallengeTask {
@@ -13,7 +13,7 @@ class DNSChallengeTask {
    * @var AcmeDns01Record[]
    */
   protected array $records;
-  protected DnsAPIForLEClient $dns;
+  protected DnsPluginContract $dns;
   /** @var AuthorizationChallenge[] */
   protected array $challenges;
   protected AcmePHPWrapper $parent;
@@ -26,7 +26,7 @@ class DNSChallengeTask {
     }
   }
   
-  public function setDnsClient ( DnsAPIForLEClient $dns ): void {
+  public function setDnsClient ( DnsPluginContract $dns ): void {
     $this->dns = $dns;
   }
   

@@ -6,7 +6,7 @@ use Takuya\LEClientDNS01\PKey\AsymmetricKey;
 use Takuya\LEClientDNS01\PKey\CSRSubject;
 use Takuya\LEClientDNS01\Delegators\AcmePHPWrapper;
 use Takuya\LEClientDNS01\PKey\CertificateWithPrivateKey;
-use Takuya\LEClientDNS01\Delegators\DnsAPIForLEClient;
+use Takuya\LEClientDNS01\Delegators\DnsPluginContract;
 use Takuya\LEClientDNS01\Delegators\LetsEncryptServer;
 
 class LetsEncryptAcmeDNS {
@@ -15,7 +15,7 @@ class LetsEncryptAcmeDNS {
     public string            $priv_key,
     public string            $owner_email,
     protected array          $domain_names,
-    public DnsAPIForLEClient $dns,
+    public DnsPluginContract $dns,
   ) {
     $this->domain_names = $this->validateDomainName( $domain_names );
   }

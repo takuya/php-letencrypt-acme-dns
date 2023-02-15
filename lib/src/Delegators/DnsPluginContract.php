@@ -2,7 +2,7 @@
 
 namespace Takuya\LEClientDNS01\Delegators;
 
-interface DnsAPIForLEClient {
+interface DnsPluginContract {
   public function addDnsTxtRecord ( $domain, $content ): bool;
   
   public function removeTxtRecord ( $domain, $content ): bool;

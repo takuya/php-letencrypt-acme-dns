@@ -34,7 +34,7 @@ class AcmePHPWrapper {
     $this->acme_php = $this->initialize_acme_client( $directory_url );
   }
   
-  protected function initialize_acme_client ( $directory_url = LetsEncryptServer::STAGING ): AcmeClient {
+  protected function initialize_acme_client ( $directory_url  ): AcmeClient {
     $factory = new SecureHttpClientFactory(
       new GuzzleHttpClient(),
       new Base64SafeEncoder(),
@@ -86,7 +86,7 @@ class AcmePHPWrapper {
     }
     return $dns_challenges;
   }
-  public function challengeAuthorization(AuthorizationChallenge $challenge ){
+  public function challengeAuthorization(AuthorizationChallenge $challenge ): bool {
     $ret = $this->acme_php->challengeAuthorization($challenge);
     return $ret['status'] == 'valid';
   }

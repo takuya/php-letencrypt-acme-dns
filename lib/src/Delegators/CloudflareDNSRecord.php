@@ -2,7 +2,7 @@
 
 namespace Takuya\LEClientDNS01\Delegators;
 
-class CloudflareDNSRecord implements DnsAPIForLEClient {
+class CloudflareDNSRecord implements DnsPluginContract {
   
   use DNSRecordUpdateWaiting;
   
