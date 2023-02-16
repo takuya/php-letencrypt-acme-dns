@@ -58,19 +58,38 @@ class LetsEncryptAcmeDNS {
     $cli->newOrder( $this->domain_names );
     $challenges = $cli->getDnsChallenge();
     $on_wait = $on_dns_wait ??function( $name, $type, $content ) {
-      $mess = sprintf( '...wait ( %s, %s, %s...) for update TXT in SOA NS.'.PHP_EOL ,
+      $message = sprintf( '...wait ( %s, %s, %s...) for update TXT in SOA NS.'.PHP_EOL ,
           $name, $type, substr($content,'0',5));
-      $this->log($mess);
+      $this->log($message);
     };
-    foreach ( $challenges as $challenge ) {
-      $challenge->setDnsClient( $this->dns );
-      $challenge->start( $on_wait );
-    }
+    $this->processDNSTask($challenges,$on_wait);
+    
     // Finalize order.
     $cli->finalizeOrderCertificate( $this->domain_names[0], $dn, $domain_key->privKey() );
     //// Get Result.
     $ret = $cli->certificateLastIssued();
     $cert_and_a_key = new CertificateWithPrivateKey( $domain_key->privKey(), $ret['cert'], $ret['intermediate'] );
     return $cert_and_a_key;
+  }
+  protected function processDNSTask($challenges,$on_wait){
+    /** @var \Fiber[] $fibers */
+    $fibers = [];
+    foreach (  $challenges as $key => $challenge) {
+      $challenge->setDnsClient( $this->dns );
+      $fibers[$key] = new \Fiber(function(DNSChallengeTask $task,callable $func):bool{
+        $task->start( $func );
+        return true;
+      });
+    }
+    // start
+    foreach ( $challenges as $key => $challenge ) {
+      $fibers[$key]->start( $challenge, $on_wait );
+    }
+    // wait
+    foreach ( $fibers as $fiber ) {
+      while(!$fiber->isTerminated()){
+        $fiber->resume();
+      }
+    }
   }
 }

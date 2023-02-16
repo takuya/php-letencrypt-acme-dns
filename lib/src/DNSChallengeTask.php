@@ -47,9 +47,14 @@ class DNSChallengeTask {
       $this->parent->challengeAuthorization($challenge);
     }
   }
-  protected function waitDNS(callable $on_wait=null): void {
+  protected function waitDNS(callable $on_wait_from_user=null): void {
+    $on_each_wait=function($name,$type,$content)use($on_wait_from_user){
+      \Fiber::suspend($content);
+      $on_wait_from_user && $on_wait_from_user($name,$type,$content);
+    };
+
     foreach ( $this->records as $record){
-      $this->dns->waitForUpdated($record->acme_domain_name(),'TXT',$record->acme_content(),$on_wait);
+      $this->dns->waitForUpdated($record->acme_domain_name(),'TXT',$record->acme_content(),$on_each_wait);
     }
   }
   protected function cleanUpDnsRecord(): void {
