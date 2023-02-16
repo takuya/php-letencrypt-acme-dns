@@ -5,6 +5,7 @@ use Takuya\LEClientDNS01\Delegators\CloudflareDNSRecord;
 use Takuya\LEClientDNS01\PKey\AsymmetricKey;
 use Takuya\LEClientDNS01\LetsEncryptAcmeDNS;
 use Takuya\LEClientDNS01\PKey\SSLCertificateInfo;
+use Takuya\LEClientDNS01\Delegators\LetsEncryptServer;
 
 require_once __DIR__.DIRECTORY_SEPARATOR.'../vendor/autoload.php';
 
@@ -19,7 +20,7 @@ $cf_dns_api->enable_dns_check_at_waiting_for_update = true;
 
 $cli = new LetsEncryptAcmeDNS( $ownerPkey->privKey(), $email, $domain_names, $cf_dns_api );
 $cli->setLogger( $logger );
-$cert_and_a_key = $cli->orderNewCert();
+$cert_and_a_key = $cli->orderNewCert(LetsEncryptServer::PROD);
 
 $info = new SSLCertificateInfo( $cert_and_a_key->cert() );
 
