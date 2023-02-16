@@ -8,16 +8,16 @@ use Takuya\LEClientDNS01\PKey\SSLCertificateInfo;
 
 require_once __DIR__.DIRECTORY_SEPARATOR.'../vendor/autoload.php';
 
-$cf_token = getenv( 'LE_CLOUDFLARE_TOKEN' );
-$email = getenv( 'LE_EMAIL' );
-$base_domain = getenv( 'LE_BASE_DOMAIN' );
+$cf_token     = getenv( 'LE_CLOUDFLARE_TOKEN' );
+$email        = getenv( 'LE_EMAIL' );
+$base_domain  = getenv( 'LE_BASE_DOMAIN' );
 $domain_names = array_slice( $argv, 1, );
-
-$logger = new class {public function debug ( $mess ) { file_put_contents( "php://stderr", $mess ); }};
-$cf = new CloudflareDNSRecord( $cf_token, $base_domain ?: base_domain( $domain_names[0] ) );
-$cf->enable_dns_check_at_waiting_for_update = true;
 $ownerPkey = new AsymmetricKey();
-$cli = new LetsEncryptAcmeDNS( $ownerPkey->privKey(), $email, $domain_names, $cf );
+$logger       = new class {public function debug ( $mess ) { file_put_contents( "php://stderr", $mess ); }};
+$cf_dns_api   = new CloudflareDNSRecord( $cf_token, $base_domain ?: base_domain( $domain_names[0] ) );
+$cf_dns_api->enable_dns_check_at_waiting_for_update = true;
+
+$cli = new LetsEncryptAcmeDNS( $ownerPkey->privKey(), $email, $domain_names, $cf_dns_api );
 $cli->setLogger( $logger );
 $cert_and_a_key = $cli->orderNewCert();
 
