@@ -54,12 +54,13 @@ composer install
 
 ## dependencies
 ```
+php: >=8.1
 composer:
     "cloudflare/sdk": "^1.3",
     "acmephp/core": "^2.1",
     "ext-openssl": "*"
-
 ```
+Fiber used. php8.1 required. waiting dns update uses Fiber.
 ## Requirements
 To Check DNS TXT recoed updated.
 - This package requires `Outbound UDP/53 are opened`.
