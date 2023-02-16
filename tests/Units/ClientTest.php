@@ -12,7 +12,7 @@ use Takuya\LEClientDNS01\PKey\SSLCertificateInfo;
 class ClientTest extends TestCase {
   public function test_wildcard_and_base_domain_multi_cert(){
     $base_domain = getenv( 'LE_SAMPLE_BASE_DOMAIN' );
-    $cf_api_token = getenv( 'LE_SAMPLE_CLOUDFLARE_TOKEN' );
+    $cf_api_token = getenv( 'LE_CLOUDFLARE_TOKEN' );
     $email = getenv( 'LE_SAMPLE_EMAIL' );
     $cf = new CloudflareDNSRecord( $cf_api_token, $base_domain );
     $cf->enable_dns_check_at_waiting_for_update=true;

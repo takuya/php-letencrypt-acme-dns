@@ -4,25 +4,31 @@ This Library helps us to obtain Let's Encrypt SSLCertificate with DNS-01 ACMEv2.
 
 This is Pure php , for embedded to WEB PHP-App (ex. laravel).  **Independent** from `shell command` like `certbot`.   
 
+### Run ACME. 
+request issue of certificate by DNS-01.
+```php
+export LE_CLOUDFLARE_TOKEN='X-811Gxxxxx'
+export LE_EMAIL='yourname@example.tld'
+bin/request-issue 'aab.example.tld' 'aaa.example.tld'
+```
 
 ### EXAMPLE.
-
+In you php code.
 ```php
 <?php
 
 /** ********
  * Prepare
  */ 
-$base_domain  = getenv( 'LE_SAMPLE_BASE_DOMAIN' );
-$cf_api_token = getenv( 'LE_SAMPLE_CLOUDFLARE_TOKEN' );
-$your_email   = getenv( 'LE_SAMPLE_EMAIL' );
-$domain_name  = ["www.your-domain.tld",'*.www.your-domain.tld'];
+$cf_api_token = getenv( 'LE_CLOUDFLARE_TOKEN' );
+$your_email   = getenv( 'LE_EMAIL' );
+$domain_names = ["www.your-domain.tld",'*.www.your-domain.tld'];
 $owner_pkey   = new AsymmetricKey();// user's pkey, not a domain cert  pkey.
 /** ********
  * Order certificate.
  */
-$dns = new CloudflareDNSRecord( $cf_api_token, $domain_name[0] );
-$cli = new LetsEncryptAcmeDNS( $owner_pkey, $your_email, $domain_name, $dns );
+$dns = new CloudflareDNSRecord( $cf_api_token, base_domain($domain_names[0]) );
+$cli = new LetsEncryptAcmeDNS( $owner_pkey, $your_email, $domain_names, $dns );
 $cert_and_a_key = $cli->orderNewCert(LetsEncryptServer::STAGING);
 
 /** ********

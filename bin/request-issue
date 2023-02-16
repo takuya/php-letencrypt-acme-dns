@@ -1,0 +1,55 @@
+#!/usr/bin/env php
+<?php
+
+use Takuya\LEClientDNS01\Delegators\CloudflareDNSRecord;
+use Takuya\LEClientDNS01\PKey\AsymmetricKey;
+use Takuya\LEClientDNS01\LetsEncryptAcmeDNS;
+use Takuya\LEClientDNS01\PKey\SSLCertificateInfo;
+
+require_once __DIR__.DIRECTORY_SEPARATOR.'../vendor/autoload.php';
+
+$cf_token = getenv( 'LE_CLOUDFLARE_TOKEN' );
+$email = getenv( 'LE_EMAIL' );
+$base_domain = getenv( 'LE_BASE_DOMAIN' );
+$domain_names = array_slice( $argv, 1, );
+
+$logger = new class {
+  public function debug ( $mess ) { file_put_contents( "php://stderr", $mess ); }
+};
+$cf = new CloudflareDNSRecord( $cf_token, $base_domain ?: base_domain( $domain_names[0] ) );
+$cf->enable_dns_check_at_waiting_for_update = true;
+$ownerPkey = new AsymmetricKey();
+$cli = new LetsEncryptAcmeDNS( $ownerPkey->privKey(), $email, $domain_names, $cf );
+$cli->setLogger( $logger );
+$cert_and_a_key = $cli->orderNewCert();
+
+$info = new SSLCertificateInfo( $cert_and_a_key->cert() );
+
+printf( "
+CN    : %s
+SAN   : %s
+ID    : %s
+FROM  :%s
+TO    :%s
+#
+# -------------- private key --------------
+#
+%s
+#
+# -------------- certificate --------------
+#
+%s
+#
+# -------------- fullchain --------------
+#
+%s
+",
+  $info->subject['commonName'],
+  $info->extensions['subjectAltName'],
+  $info->serialNumberHex,
+  $info->validFrom,
+  $info->validTo,
+  $cert_and_a_key->privKey(),
+  $cert_and_a_key->cert(),
+  $cert_and_a_key->fullChain(),
+);

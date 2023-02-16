@@ -11,6 +11,9 @@ use Takuya\LEClientDNS01\Delegators\LetsEncryptServer;
 
 class LetsEncryptAcmeDNS {
   
+  /** @var \Monolog\Logger */
+  protected $logger;
+  
   public function __construct (
     public string            $priv_key,
     public string            $owner_email,
@@ -19,12 +22,19 @@ class LetsEncryptAcmeDNS {
   ) {
     $this->domain_names = $this->validateDomainName( $domain_names );
   }
+  public function setLogger($logger): void {
+    $this->logger=$logger;
+  }
+  public function log($message,$level='debug'){
+    // expect monolog.
+    $this->logger?->$level($message);
+  }
   
   protected function validateDomainName ( $domain_names ) {
     empty( $domain_names ) && throw new \RuntimeException( 'DNS must not be empty.' );
     rsort( $domain_names );
     usort( $domain_names, function( $a, $b ) { return strlen( $a ) > strlen( $b ); } );
-    $base_name = $domain_names[0];
+    $base_name = parent_domain($domain_names[0]);
     $same_origin = array_filter( $domain_names, function( $e ) use ( $base_name ) {
       return str_contains( $e, $base_name );
     } );
@@ -34,7 +44,7 @@ class LetsEncryptAcmeDNS {
     return $domain_names;
   }
   
-  public function orderNewCert ( $acme_uri = LetsEncryptServer::STAGING ): CertificateWithPrivateKey {
+  public function orderNewCert ( $acme_uri = LetsEncryptServer::STAGING, callable $on_dns_wait=null ): CertificateWithPrivateKey {
     // keys
     $owner_pky = new AsymmetricKey( $this->priv_key );
     // cert keys
@@ -47,9 +57,11 @@ class LetsEncryptAcmeDNS {
     $cli->newAccount( $this->owner_email );
     $cli->newOrder( $this->domain_names );
     $challenges = $cli->getDnsChallenge();
-    $on_wait = null;
-    //$on_wait = function( ...$args ) { dump( '...wait for SOA NS update TXT.' ); };
-    //$on_wait = function( ...$args ) { dump( ['waiting',...$args]); };
+    $on_wait = $on_dns_wait ??function( $name, $type, $content ) {
+      $mess = sprintf( '...wait ( %s, %s, %s...) for update TXT in SOA NS.'.PHP_EOL ,
+          $name, $type, substr($content,'0',5));
+      $this->log($mess);
+    };
     foreach ( $challenges as $challenge ) {
       $challenge->setDnsClient( $this->dns );
       $challenge->start( $on_wait );

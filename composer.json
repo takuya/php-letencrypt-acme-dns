@@ -31,8 +31,8 @@
     "ext-openssl": "*"
   },
   "require-dev": {
-    "phpunit/phpunit": "^10.0",
-    "larapack/dd": "^1.1",
+    "phpunit/phpunit": "*",
+    "larapack/dd": "*",
     "takuya/php-random-string": "^0.1.0"
   }
 }
