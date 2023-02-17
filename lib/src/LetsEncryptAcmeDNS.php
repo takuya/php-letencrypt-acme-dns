@@ -32,9 +32,8 @@ class LetsEncryptAcmeDNS {
   
   protected function validateDomainName ( $domain_names ) {
     empty( $domain_names ) && throw new \RuntimeException( 'DNS must not be empty.' );
-    rsort( $domain_names );
     usort( $domain_names, function( $a, $b ) { return strlen( $a ) > strlen( $b ); } );
-    $base_name = parent_domain($domain_names[0]);
+    $base_name = parent_domain( $domain_names[0] );
     $same_origin = array_filter( $domain_names, function( $e ) use ( $base_name ) {
       return str_contains( $e, $base_name );
     } );
@@ -81,12 +80,12 @@ class LetsEncryptAcmeDNS {
   protected function processDNSTask ( $challenges, $on_wait ) {
     /** @var \Fiber[] $fibers */
     $fibers = [];
-    foreach (  $challenges as $key => $challenge) {
+    foreach ( $challenges as $key => $challenge ) {
       $challenge->setDnsClient( $this->dns );
-      $fibers[$key] = new \Fiber(function(DNSChallengeTask $task,callable $func):bool{
+      $fibers[$key] = new \Fiber( function( DNSChallengeTask $task, callable $func ): bool {
         $task->start( $func );
         return true;
-      });
+      } );
     }
     // start
     foreach ( $challenges as $key => $challenge ) {
