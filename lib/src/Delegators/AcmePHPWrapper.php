@@ -15,7 +15,6 @@ use AcmePhp\Ssl\PrivateKey;
 use AcmePhp\Ssl\DistinguishedName;
 use AcmePhp\Ssl\CertificateRequest;
 use Takuya\LEClientDNS01\PKey\AsymmetricKey;
-use Takuya\LEClientDNS01\AcmeDns01Record;
 use AcmePhp\Core\Protocol\AuthorizationChallenge;
 use Takuya\LEClientDNS01\DNSChallengeTask;
 use Takuya\LEClientDNS01\PKey\CSRSubject;

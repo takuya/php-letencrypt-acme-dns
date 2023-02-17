@@ -1,6 +1,6 @@
 <?php
 
-namespace Takuya\LEClientDNS01\Delegators;
+namespace Takuya\LEClientDNS01\Plugin\DNS\traits;
 
 trait DNSQuery {
   public function query ( $name, $type ) {

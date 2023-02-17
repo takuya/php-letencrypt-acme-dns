@@ -1,6 +1,6 @@
 <?php
 
-namespace Takuya\LEClientDNS01\Delegators;
+namespace Takuya\LEClientDNS01\Plugin\DNS;
 
 interface DnsPluginContract {
   public function addDnsTxtRecord ( $domain, $content ): bool;

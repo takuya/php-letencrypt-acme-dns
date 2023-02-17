@@ -5,7 +5,7 @@ namespace tests\Units;
 use tests\TestCase;
 use Takuya\LEClientDNS01\LetsEncryptAcmeDNS;
 use Takuya\RandomString\RandomString;
-use Takuya\LEClientDNS01\Delegators\CloudflareDNSRecord;
+use Takuya\LEClientDNS01\Plugin\DNS\CloudflareDNSPlugin;
 use Takuya\LEClientDNS01\PKey\AsymmetricKey;
 use Takuya\LEClientDNS01\PKey\SSLCertificateInfo;
 
@@ -14,7 +14,7 @@ class ClientTest extends TestCase {
     $base_domain = getenv( 'LE_SAMPLE_BASE_DOMAIN' );
     $cf_api_token = getenv( 'LE_CLOUDFLARE_TOKEN' );
     $email = getenv( 'LE_SAMPLE_EMAIL' );
-    $cf = new CloudflareDNSRecord( $cf_api_token, $base_domain );
+    $cf = new CloudflareDNSPlugin( $cf_api_token, $base_domain );
     $cf->enable_dns_check_at_waiting_for_update=true;
     $ownerPkey = new AsymmetricKey();
     
@@ -41,7 +41,7 @@ class ClientTest extends TestCase {
     $base_domain = getenv( 'LE_SAMPLE_BASE_DOMAIN' );
     $cf_api_token = getenv( 'LE_SAMPLE_CLOUDFLARE_TOKEN' );
     $email = getenv( 'LE_SAMPLE_EMAIL' );
-    $cf = new CloudflareDNSRecord( $cf_api_token, $base_domain );
+    $cf = new CloudflareDNSPlugin( $cf_api_token, $base_domain );
     $cf->enable_dns_check_at_waiting_for_update=true;
     $ownerPkey = new AsymmetricKey();
     
@@ -67,7 +67,7 @@ class ClientTest extends TestCase {
     $base_domain = getenv( 'LE_SAMPLE_BASE_DOMAIN' );
     $cf_api_token = getenv( 'LE_SAMPLE_CLOUDFLARE_TOKEN' );
     $email = getenv( 'LE_SAMPLE_EMAIL' );
-    $cf = new CloudflareDNSRecord( $cf_api_token, $base_domain );
+    $cf = new CloudflareDNSPlugin( $cf_api_token, $base_domain );
     $cf->enable_dns_check_at_waiting_for_update=true;
     $ownerPkey = new AsymmetricKey();
   
@@ -93,7 +93,7 @@ class ClientTest extends TestCase {
     $base_domain = getenv( 'LE_SAMPLE_BASE_DOMAIN' );
     $cf_api_token = getenv( 'LE_SAMPLE_CLOUDFLARE_TOKEN' );
     $email = getenv( 'LE_SAMPLE_EMAIL' );
-    $cf = new CloudflareDNSRecord( $cf_api_token, $base_domain );
+    $cf = new CloudflareDNSPlugin( $cf_api_token, $base_domain );
     $cf->enable_dns_check_at_waiting_for_update=true;
     $ownerPkey = new AsymmetricKey();
   

@@ -4,7 +4,7 @@ namespace Takuya\LEClientDNS01;
 
 use AcmePhp\Core\Protocol\AuthorizationChallenge;
 use Takuya\LEClientDNS01\Delegators\AcmePHPWrapper;
-use Takuya\LEClientDNS01\Delegators\DnsPluginContract;
+use Takuya\LEClientDNS01\Plugin\DNS\DnsPluginContract;
 
 
 class DNSChallengeTask {
