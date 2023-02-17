@@ -30,6 +30,15 @@ class CertificateWithPrivateKey {
       'public_key' => $this->pubkey(),
     ];
   }
+  public function pkcs12($passphrase=''){
+    openssl_pkcs12_export(
+      $this->cert(),
+      $pkcs12,
+      $this->privKey(),
+      $passphrase
+    );
+    return $pkcs12;
+  }
   
   
 }
