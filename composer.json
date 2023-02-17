@@ -28,7 +28,8 @@
   "require": {
     "cloudflare/sdk": "^1.3",
     "acmephp/core": "^2.1",
-    "ext-openssl": "*"
+    "ext-openssl": "*",
+    "pear/net_dns2": "^1.5"
   },
   "require-dev": {
     "phpunit/phpunit": "*",

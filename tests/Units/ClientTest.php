@@ -99,7 +99,7 @@ class ClientTest extends TestCase {
   
     $str = RandomString::gen( 5, RandomString::LOWER );
     $domain_names = ["{$str}.{$base_domain}"];
-  
+    
     $cli = new LetsEncryptAcmeDNS($ownerPkey->privKey() , $email,$domain_names, $cf );
     $new_cert = $cli->orderNewCert();
     $this->assertArrayHasKey( 'public_key', $new_cert->toArray() );
