@@ -32,7 +32,7 @@ $acme_uri     = LetsEncryptACMEServer::STAGING
  */
 $dns = new CloudflareDNSRecord( $cf_api_token, base_domain($domain_names[0]) );
 $cli = new LetsEncryptAcmeDNS( $owner_pkey, $your_email, $domain_names, $dns, $acme_uri );
-$cert_and_a_key = $cli->orderNewCert(LetsEncryptServer::STAGING);
+$cert_and_a_key = $cli->orderNewCert();
 
 /** ********
  * Save in your own way.
@@ -67,11 +67,10 @@ Fiber used. To use Fiber php8.1 required. Fiber used in waiting dns update.
 ## Requirements
 To Check DNS TXT recoed updated.
 - This package requires `Outbound UDP/53 are opened`.
-- This package uses `dig` command, dig need to be installed for DNS SOA/NS/TXT.
 
 ## Future Plan
 
-I will remove `acme/php` and `dig` dependency in the near future.
+I will remove `acme/php` dependency in the future.
 
 
 
