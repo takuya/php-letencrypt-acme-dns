@@ -101,20 +101,35 @@ class ClientTest extends TestCase {
     $domain_names = ["{$str}.{$base_domain}"];
   
     $cli = new LetsEncryptAcmeDNS($ownerPkey->privKey() , $email,$domain_names, $cf );
-    $cert_and_a_key = $cli->orderNewCert();
-    $info = new SSLCertificateInfo($cert_and_a_key->cert());
-    $this->assertArrayHasKey( 'public_key', $cert_and_a_key->toArray() );
-    $this->assertArrayHasKey( 'private_key', $cert_and_a_key->toArray() );
-    $this->assertArrayHasKey( 'certificate', $cert_and_a_key->toArray() );
-    $this->assertArrayHasKey( 'intermediates', $cert_and_a_key->toArray() );
-  
-    $cert = new SSLCertificateInfo( $cert_and_a_key->toArray()['certificate'] );
-    $this->assertStringContainsString("Let's Encrypt", $cert->issuer['organizationName']);
-    $this->assertStringContainsString($base_domain,  $cert->subject['commonName']);
+    $new_cert = $cli->orderNewCert();
+    $this->assertArrayHasKey( 'public_key', $new_cert->toArray() );
+    $this->assertArrayHasKey( 'private_key', $new_cert->toArray() );
+    $this->assertArrayHasKey( 'certificate', $new_cert->toArray() );
+    $this->assertArrayHasKey( 'intermediates', $new_cert->toArray() );
+    // cert attributes.
+    $cert_info = new SSLCertificateInfo( $new_cert->cert() );
+    $this->assertStringContainsString("Let's Encrypt", $cert_info->issuer['organizationName']);
+    $this->assertStringContainsString($base_domain,  $cert_info->subject['commonName']);
     foreach ( $domain_names as $domain_name ) {
-      $this->assertStringContainsString($domain_name,  $cert->extensions['subjectAltName']);
+      $this->assertStringContainsString($domain_name,  $cert_info->extensions['subjectAltName']);
     }
+    // pkcs12
+    $pass = RandomString::gen( 15, RandomString::LOWER );
+    $str = $new_cert->pkcs12($pass );
+    openssl_pkcs12_read($str,$c, $pass);
+    $this->assertEquals(trim($new_cert->privKey()),trim($c['pkey']));
+    $this->assertEquals(trim($new_cert->cert()),trim($c['cert']));
+    // renew
+    $renew_cert = $cli->orderNewCert($new_cert->privKey());
+    $renew_info = new SSLCertificateInfo( $renew_cert->cert() );
+    $this->assertStringContainsString("Let's Encrypt", $renew_info->issuer['organizationName']);
+    $this->assertStringContainsString($base_domain,  $renew_info->subject['commonName']);
+    foreach ( $domain_names as $domain_name ) {
+      $this->assertStringContainsString($domain_name,  $renew_info->extensions['subjectAltName']);
+    }
+    $this->assertEquals($new_cert->privKey(),$renew_cert->privKey());
+    
+    
   }
-  
   
 }
