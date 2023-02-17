@@ -98,7 +98,7 @@ class AcmePHPWrapper {
     $acme_csr = $this->createCSR($dn,$domain_private_key);
     $this->certificateResponse = $this->acme_php->finalizeOrder($this->order,$acme_csr);
   }
-  protected function createCSR(CSRSubject $dn, $domain_private_key){
+  protected function createCSR(CSRSubject $dn, $domain_private_key): CertificateRequest {
     // AcmePHP はCSRに手間が多い。 openssl_csr_new がSAN 非対応のため。
     $dn = new DistinguishedName( ...$dn->toArray() );
     $domain_pkey = new AsymmetricKey( $domain_private_key );
