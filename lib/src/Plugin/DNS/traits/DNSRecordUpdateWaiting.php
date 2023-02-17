@@ -2,8 +2,6 @@
 
 namespace Takuya\LEClientDNS01\Plugin\DNS\traits;
 
-namespace Takuya\LEClientDNS01\Plugin\DNS\traits;
-
 trait DNSRecordUpdateWaiting {
   
   use DNSQuery;

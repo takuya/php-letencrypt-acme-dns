@@ -2,8 +2,6 @@
 
 namespace Takuya\LEClientDNS01;
 
-use AcmePhp\Core\Protocol\AuthorizationChallenge;
-use Takuya\LEClientDNS01\Delegators\AcmePHPWrapper;
 use Takuya\LEClientDNS01\Plugin\DNS\DnsPluginContract;
 
 
@@ -23,48 +21,50 @@ class DNSChallengeTask {
   /**
    * @return array|AcmeDns01Record[]
    */
-  public function getRecords(): array {
+  public function getRecords (): array {
     return $this->records;
   }
   
-  protected function updateDNSRecord(): void {
-    foreach ( $this->records as $record){
-      $this->dns->addDnsTxtRecord($record->acme_domain_name(),$record->acme_content());
+  protected function updateDNSRecord (): void {
+    foreach ( $this->records as $record ) {
+      $this->dns->addDnsTxtRecord( $record->acme_domain_name(), $record->acme_content() );
     }
   }
-  protected function verifyDNS(LetsEncryptAcmeDNS $parent): void {
+  
+  protected function verifyDNS ( LetsEncryptAcmeDNS $parent ): void {
     foreach ( $this->challenges as $challenge ) {
-      $parent->challengeDNSAuthorization($challenge);
+      $parent->challengeDNSAuthorization( $challenge );
     }
   }
-  protected function waitDNS(callable $on_wait_from_user=null): void {
-    $on_each_wait=function($name,$type,$content)use($on_wait_from_user){
-      \Fiber::suspend($content);
-      $on_wait_from_user && $on_wait_from_user($name,$type,$content);
+  
+  protected function waitDNS ( callable $on_wait_from_user = null ): void {
+    $on_each_wait = function( $name, $type, $content ) use ( $on_wait_from_user ) {
+      \Fiber::suspend( $content );
+      $on_wait_from_user && $on_wait_from_user( $name, $type, $content );
     };
-
-    foreach ( $this->records as $record){
-      $this->dns->waitForUpdated($record->acme_domain_name(),'TXT',$record->acme_content(),$on_each_wait);
+    
+    foreach ( $this->records as $record ) {
+      $this->dns->waitForUpdated( $record->acme_domain_name(), 'TXT', $record->acme_content(), $on_each_wait );
     }
   }
-  protected function cleanUpDnsRecord(): void {
-    foreach ( $this->records as $record){
-      $this->dns->removeTxtRecord($record->acme_domain_name(),$record->acme_content());
+  
+  protected function cleanUpDnsRecord (): void {
+    foreach ( $this->records as $record ) {
+      $this->dns->removeTxtRecord( $record->acme_domain_name(), $record->acme_content() );
     }
   }
-  public function start(LetsEncryptAcmeDNS $parent, callable $on_wait=null): void {
-    try{
+  
+  public function start ( LetsEncryptAcmeDNS $parent, callable $on_wait = null ): void {
+    try {
       $this->updateDNSRecord();
-      $this->waitDNS($on_wait);
-      $this->verifyDNS($parent);
+      $this->waitDNS( $on_wait );
+      $this->verifyDNS( $parent );
       $this->cleanUpDnsRecord();
-    }catch (\Exception $e){
+    } catch (\Exception $e) {
       $this->cleanUpDnsRecord();
       throw $e;
     }
   }
-  
-  
   
   
 }

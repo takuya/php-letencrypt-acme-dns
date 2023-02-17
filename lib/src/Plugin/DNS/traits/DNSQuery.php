@@ -10,8 +10,8 @@ trait DNSQuery {
       if ( filter_var( $ns, FILTER_VALIDATE_IP ) === false ) {
         $r = new \Net_DNS2_Resolver( ['timeout' => 3] );
         $result = $r->query( $ns );
-        $authority_nameservers = array_map( fn( $e ) => $e->address, $result->answer );
-        $ns = $authority_nameservers[0];
+        $authority_nameserver_ips = array_map( fn( $answer ) => $answer->address, $result->answer );
+        $ns = $authority_nameserver_ips[0];
       }
       // check record
       $r = new \Net_DNS2_Resolver( ['nameservers' => [$ns], 'timeout' => 1] );

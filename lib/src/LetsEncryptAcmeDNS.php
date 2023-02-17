@@ -10,7 +10,7 @@ use Takuya\LEClientDNS01\Plugin\DNS\DNSPlugin;
 
 class LetsEncryptAcmeDNS {
   
-  /** @var \Monolog\Logger */
+  /** @var Monolog\Logger */
   protected $logger;
   protected AcmePHPWrapper $acme_cli;
   
@@ -23,15 +23,6 @@ class LetsEncryptAcmeDNS {
   ) {
     $this->domain_names = $this->validateDomainName( $domain_names );
     $this->acme_cli = $this->initAcmePHP( $this->acme_uri );
-  }
-  
-  public function setLogger ( $logger ): void {
-    $this->logger = $logger;
-  }
-  
-  public function log ( $message, $level = 'debug' ): void {
-    // expect monolog.
-    $this->logger?->$level( $message );
   }
   
   protected function validateDomainName ( $domain_names ) {
@@ -54,33 +45,8 @@ class LetsEncryptAcmeDNS {
     return $cli;
   }
   
-  /**
-   * @throws \Throwable
-   */
-  protected function newOrder ( AsymmetricKey $domain_pkey, callable $on_dns_wait = null ): CertificateWithPrivateKey {
-    // CSR
-    $dn = new CSRSubject( ...['commonName' => $this->domain_names[0], 'subjectAlternativeNames' => $this->domain_names] );
-    // start lets encrypt ACMEv2 process
-    $cli = $this->acme_cli;
-    //
-    $cli->newOrder( $this->domain_names );
-    $challenges = $cli->getDnsChallenge();
-    $task = $this->createChallengeTask( $challenges );
-    $on_wait = $on_dns_wait ?? function( $name, $type, $content ) {
-      $message = sprintf( '...wait ( %s, %s, %s...) for update TXT in SOA NS.'.PHP_EOL,
-        $name, $type, substr( $content, '0', 5 ) );
-      $this->log( $message );
-    };
-    $this->processDNSTask( $task, $on_wait );
-    
-    // Finalize order.
-    $cli->finalizeOrderCertificate( $this->domain_names[0], $dn, $domain_pkey->privKey() );
-    //// Get Result.
-    return new CertificateWithPrivateKey(
-      $domain_pkey->privKey(),
-      $cli->certificateLastIssued()['cert'],
-      $cli->certificateLastIssued()['intermediate']
-    );
+  public function setLogger ( $logger ): void {
+    $this->logger = $logger;
   }
   
   /**
@@ -94,6 +60,36 @@ class LetsEncryptAcmeDNS {
   }
   
   /**
+   * @throws \Throwable
+   */
+  protected function newOrder ( AsymmetricKey $domain_pkey, callable $on_dns_wait = null ): CertificateWithPrivateKey {
+    // CSR
+    $dn = new CSRSubject( ...['commonName' => $this->domain_names[0], 'subjectAlternativeNames' => $this->domain_names] );
+    // start lets encrypt ACMEv2 process
+    $cli = $this->acme_cli;
+    $cli->newOrder( $this->domain_names );
+    $chal = $cli->getDnsChallenge();
+    $task = $this->createChallengeTask( $chal );
+    $this->processDNSTask( $task, $on_dns_wait ?? $this->default_on_wait_callback() );
+    
+    // Finalize order.
+    $cli->finalizeOrderCertificate( $this->domain_names[0], $dn, $domain_pkey->privKey() );
+    //// Get Result.
+    return new CertificateWithPrivateKey(
+      $domain_pkey->privKey(),
+      $cli->certificateLastIssued()['cert'],
+      $cli->certificateLastIssued()['intermediate']
+    );
+  }
+  private function default_on_wait_callback(): \Closure {
+    return function( $name, $type, $content ) {
+      $message = sprintf( '...wait ( %s, %s, %s...) for update TXT in SOA NS.'.PHP_EOL,
+        $name, $type, substr( $content, '0', 5 ) );
+      $this->log( $message );
+    };
+  }
+  
+  /**
    * @return DNSChallengeTask[]|array
    */
   protected function createChallengeTask ( array $challenges ): array {
@@ -104,8 +100,9 @@ class LetsEncryptAcmeDNS {
     return $tasks;
   }
   
-  public function challengeDNSAuthorization ( array $challenges ): bool {
-    return $this->acme_cli->challengeDNSAuthorization( $challenges );
+  public function log ( $message, $level = 'debug' ): void {
+    // expect monolog.
+    $this->logger?->$level( $message );
   }
   
   /**
@@ -128,9 +125,13 @@ class LetsEncryptAcmeDNS {
     }
     // wait
     foreach ( $fibers as $fiber ) {
-      while(!$fiber->isTerminated()){
+      while ( !$fiber->isTerminated() ) {
         $fiber->resume();
       }
     }
+  }
+  
+  public function challengeDNSAuthorization ( array $challenges ): bool {
+    return $this->acme_cli->challengeDNSAuthorization( $challenges );
   }
 }
