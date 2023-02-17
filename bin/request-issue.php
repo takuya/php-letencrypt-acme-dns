@@ -1,4 +1,3 @@
-#!/usr/bin/env php
 <?php
 
 use Takuya\LEClientDNS01\Plugin\DNS\CloudflareDNSPlugin;
@@ -17,11 +16,17 @@ $ownerPkey = new AsymmetricKey();
 $logger       = new class {public function debug ( $mess ) { file_put_contents( "php://stderr", $mess ); }};
 $cf_dns_api   = new CloudflareDNSPlugin( $cf_token, $base_domain ?: base_domain( $domain_names[0] ) );
 $cf_dns_api->enable_dns_check_at_waiting_for_update = true;
-
-$cli = new LetsEncryptAcmeDNS( $ownerPkey->privKey(), $email, $domain_names, $cf_dns_api );
+$params = [
+  $ownerPkey->privKey(),
+  $email,
+  $domain_names,
+  $cf_dns_api,
+  LetsEncryptACMEServer::PROD
+];
+$cli = new LetsEncryptAcmeDNS( ...$params );
 $cli->setLogger( $logger );
-$cert_and_a_key = $cli->orderNewCert(LetsEncryptACMEServer::PROD);
-
+//
+$cert_and_a_key = $cli->orderNewCert();
 $info = new SSLCertificateInfo( $cert_and_a_key->cert() );
 
 printf( "

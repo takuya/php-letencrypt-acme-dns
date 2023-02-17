@@ -13,21 +13,11 @@ class DNSChallengeTask {
    * @var AcmeDns01Record[]
    */
   protected array $records;
-  protected DnsPluginContract $dns;
-  /** @var AuthorizationChallenge[] */
-  protected array $challenges;
-  protected AcmePHPWrapper $parent;
   
-  public function __construct ( array $challenge, AcmePHPWrapper $parent, ) {
-    $this->challenges = $challenge;
-    $this->parent = $parent;
+  public function __construct ( protected array $challenges, protected DnsPluginContract $dns ) {
     foreach ( $this->challenges as $item ) {
-      $this->records[] = new AcmeDns01Record( $item->getDomain(), $item->getPayload() );
+      $this->records[] = new AcmeDns01Record( $item['domain'], $item['payload'] );
     }
-  }
-  
-  public function setDnsClient ( DnsPluginContract $dns ): void {
-    $this->dns = $dns;
   }
   
   /**
@@ -42,9 +32,9 @@ class DNSChallengeTask {
       $this->dns->addDnsTxtRecord($record->acme_domain_name(),$record->acme_content());
     }
   }
-  protected function verifyDNS(): void {
+  protected function verifyDNS(LetsEncryptAcmeDNS $parent): void {
     foreach ( $this->challenges as $challenge ) {
-      $this->parent->challengeAuthorization($challenge);
+      $parent->challengeDNSAuthorization($challenge);
     }
   }
   protected function waitDNS(callable $on_wait_from_user=null): void {
@@ -62,11 +52,11 @@ class DNSChallengeTask {
       $this->dns->removeTxtRecord($record->acme_domain_name(),$record->acme_content());
     }
   }
-  public function start(callable $on_wait=null): void {
+  public function start(LetsEncryptAcmeDNS $parent, callable $on_wait=null): void {
     try{
       $this->updateDNSRecord();
       $this->waitDNS($on_wait);
-      $this->verifyDNS();
+      $this->verifyDNS($parent);
       $this->cleanUpDnsRecord();
     }catch (\Exception $e){
       $this->cleanUpDnsRecord();

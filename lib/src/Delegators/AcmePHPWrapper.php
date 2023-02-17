@@ -55,17 +55,13 @@ class AcmePHPWrapper {
     $this->order = $this->acme_php->requestOrder( $domain_names );
   }
   
-  /**
-   * @return DNSChallengeTask[]|array
-   */
   public function getDnsChallenge (): array {
-    $challenges = $this->dnsChallengeInCertOrder();
-    $tasks = [];
-    foreach ( $challenges as $domain=>$item ) {
-      // todo 依存を切る
-      $tasks[$domain] = new DNSChallengeTask($item,$this);
+    $challenges_per_domain = $this->dnsChallengeInCertOrder();
+    $to_array = [];
+    foreach ( $challenges_per_domain as $domain=>$challenges ) {
+      $to_array[$domain] = array_map(fn(AuthorizationChallenge $e)=>$e->toArray(),$challenges);;
     }
-    return $tasks;
+    return $to_array;
   }
   
   
@@ -85,10 +81,12 @@ class AcmePHPWrapper {
     foreach ( $found as $item ) {
       $dns_challenges[$item->getDomain()][]=$item;
     }
+    // array of array
     return $dns_challenges;
   }
-  public function challengeAuthorization(AuthorizationChallenge $challenge ): bool {
-    $ret = $this->acme_php->challengeAuthorization($challenge);
+  public function challengeDNSAuthorization( array $challenge ): bool {
+    $acme_php_challenge = AuthorizationChallenge::fromArray($challenge);
+    $ret = $this->acme_php->challengeAuthorization($acme_php_challenge);
     return $ret['status'] == 'valid';
   }
   

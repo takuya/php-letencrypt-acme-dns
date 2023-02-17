@@ -11,7 +11,7 @@ request issue of certificate by DNS-01.
 ```php
 export LE_CLOUDFLARE_TOKEN='X-811Gxxxxx'
 export LE_EMAIL='yourname@example.tld'
-bin/request-issue 'aab.example.tld' 'aaa.example.tld'
+php bin/request-issue.php 'aab.example.tld' 'aaa.example.tld'
 ```
 
 ### EXAMPLE.
@@ -26,11 +26,12 @@ $cf_api_token = getenv( 'LE_CLOUDFLARE_TOKEN' );
 $your_email   = getenv( 'LE_EMAIL' );
 $domain_names = ["www.your-domain.tld",'*.www.your-domain.tld'];
 $owner_pkey   = new AsymmetricKey();// user's pkey, not a domain cert  pkey.
+$acme_uri     = LetsEncryptACMEServer::STAGING
 /** ********
  * Order certificate.
  */
 $dns = new CloudflareDNSRecord( $cf_api_token, base_domain($domain_names[0]) );
-$cli = new LetsEncryptAcmeDNS( $owner_pkey, $your_email, $domain_names, $dns );
+$cli = new LetsEncryptAcmeDNS( $owner_pkey, $your_email, $domain_names, $dns, $acme_uri );
 $cert_and_a_key = $cli->orderNewCert(LetsEncryptServer::STAGING);
 
 /** ********

@@ -6,28 +6,32 @@ use Takuya\LEClientDNS01\PKey\AsymmetricKey;
 use Takuya\LEClientDNS01\PKey\CSRSubject;
 use Takuya\LEClientDNS01\Delegators\AcmePHPWrapper;
 use Takuya\LEClientDNS01\PKey\CertificateWithPrivateKey;
-use Takuya\LEClientDNS01\Plugin\DNS\DnsPluginContract;
 use Takuya\LEClientDNS01\Plugin\DNS\DNSPlugin;
 
 class LetsEncryptAcmeDNS {
   
   /** @var \Monolog\Logger */
   protected $logger;
+  protected AcmePHPWrapper $acme_cli;
   
   public function __construct (
-    public string            $owner_priv_key,
-    public string            $owner_email,
-    protected array          $domain_names,
+    public string    $owner_priv_key,
+    public string    $owner_email,
+    protected array  $domain_names,
     public DNSPlugin $dns,
+    public string    $acme_uri = LetsEncryptACMEServer::STAGING
   ) {
     $this->domain_names = $this->validateDomainName( $domain_names );
+    $this->acme_cli = $this->initAcmePHP( $this->acme_uri );
   }
-  public function setLogger($logger): void {
-    $this->logger=$logger;
+  
+  public function setLogger ( $logger ): void {
+    $this->logger = $logger;
   }
-  public function log($message,$level='debug'){
+  
+  public function log ( $message, $level = 'debug' ): void {
     // expect monolog.
-    $this->logger?->$level($message);
+    $this->logger?->$level( $message );
   }
   
   protected function validateDomainName ( $domain_names ) {
@@ -43,49 +47,80 @@ class LetsEncryptAcmeDNS {
     return $domain_names;
   }
   
-  protected function newOrder ( AsymmetricKey $domain_pkey,
-                                string        $acme_uri,
-                                callable      $on_dns_wait = null ): CertificateWithPrivateKey {
-    // keys
+  protected function initAcmePHP ( $acme_uri ): AcmePHPWrapper {
     $owner_pkey = new AsymmetricKey( $this->owner_priv_key );
-    $dn = new CSRSubject( ...['commonName' => $this->domain_names[0], 'subjectAlternativeNames' => $this->domain_names] );
-    
-    // start lets encrypt ACMEv2 process
     $cli = new AcmePHPWrapper( $owner_pkey->privKey(), $acme_uri );
-    //
     $cli->newAccount( $this->owner_email );
+    return $cli;
+  }
+  
+  /**
+   * @throws \Throwable
+   */
+  protected function newOrder ( AsymmetricKey $domain_pkey, callable $on_dns_wait = null ): CertificateWithPrivateKey {
+    // CSR
+    $dn = new CSRSubject( ...['commonName' => $this->domain_names[0], 'subjectAlternativeNames' => $this->domain_names] );
+    // start lets encrypt ACMEv2 process
+    $cli = $this->acme_cli;
+    //
     $cli->newOrder( $this->domain_names );
     $challenges = $cli->getDnsChallenge();
+    $task = $this->createChallengeTask( $challenges );
     $on_wait = $on_dns_wait ?? function( $name, $type, $content ) {
       $message = sprintf( '...wait ( %s, %s, %s...) for update TXT in SOA NS.'.PHP_EOL,
         $name, $type, substr( $content, '0', 5 ) );
       $this->log( $message );
     };
-    $this->processDNSTask( $challenges, $on_wait );
+    $this->processDNSTask( $task, $on_wait );
     
     // Finalize order.
     $cli->finalizeOrderCertificate( $this->domain_names[0], $dn, $domain_pkey->privKey() );
     //// Get Result.
-    $ret = $cli->certificateLastIssued();
-    $cert_and_a_key = new CertificateWithPrivateKey( $domain_pkey->privKey(), $ret['cert'], $ret['intermediate'] );
-    return $cert_and_a_key;
+    return new CertificateWithPrivateKey(
+      $domain_pkey->privKey(),
+      $cli->certificateLastIssued()['cert'],
+      $cli->certificateLastIssued()['intermediate']
+    );
   }
   
-  public function orderNewCert ( string   $domain_pkey_pem= null , $acme_uri = LetsEncryptACMEServer::STAGING,
+  /**
+   * @throws \Throwable
+   */
+  public function orderNewCert ( string   $domain_pkey_pem = null,
                                  callable $on_dns_wait = null ): CertificateWithPrivateKey {
-    $domain_key = $domain_pkey_pem ? new AsymmetricKey($domain_pkey_pem): new AsymmetricKey();
-    return $this->newOrder( $domain_key, $acme_uri, $on_dns_wait );
+    //
+    $domain_key = $domain_pkey_pem ? new AsymmetricKey( $domain_pkey_pem ) : new AsymmetricKey();
+    return $this->newOrder( $domain_key, $on_dns_wait );
   }
   
-  protected function processDNSTask ( $challenges, $on_wait ) {
+  /**
+   * @return DNSChallengeTask[]|array
+   */
+  protected function createChallengeTask ( array $challenges ): array {
+    $tasks = [];
+    foreach ( $challenges as $domain => $challenge ) {
+      $tasks[$domain] = new DNSChallengeTask( $challenge, $this->dns );
+    }
+    return $tasks;
+  }
+  
+  public function challengeDNSAuthorization ( array $challenges ): bool {
+    return $this->acme_cli->challengeDNSAuthorization( $challenges );
+  }
+  
+  /**
+   * @throws \Throwable
+   */
+  protected function processDNSTask ( $challenges, $on_wait ): void {
     /** @var \Fiber[] $fibers */
     $fibers = [];
     foreach ( $challenges as $key => $challenge ) {
-      $challenge->setDnsClient( $this->dns );
-      $fibers[$key] = new \Fiber( function( DNSChallengeTask $task, callable $func ): bool {
-        $task->start( $func );
+      //
+      $func = function( DNSChallengeTask $task, callable $on_wait ): bool {
+        $task->start( $this, $on_wait );
         return true;
-      } );
+      };
+      $fibers[$key] = new \Fiber( $func );
     }
     // start
     foreach ( $challenges as $key => $challenge ) {
