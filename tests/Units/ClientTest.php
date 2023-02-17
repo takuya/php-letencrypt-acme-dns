@@ -89,7 +89,7 @@ class ClientTest extends TestCase {
       $this->assertStringContainsString($domain_name,  $cert->extensions['subjectAltName']);
     }
   }
-  public function test_le_signle_domain () {
+  public function test_le_single_domain () {
     $base_domain = getenv( 'LE_SAMPLE_BASE_DOMAIN' );
     $cf_api_token = getenv( 'LE_SAMPLE_CLOUDFLARE_TOKEN' );
     $email = getenv( 'LE_SAMPLE_EMAIL' );
