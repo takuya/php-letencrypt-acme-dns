@@ -2,7 +2,9 @@
 
 This Library helps us to obtain Let's Encrypt SSLCertificate with DNS-01 ACMEv2.
 
-This is Pure php , for embedded to WEB PHP-App (ex. laravel).  **Independent** from `shell command` like `certbot`.   
+This is **Pure-PHP** , For embedded to WEB PHP-App (ex. laravel). 
+
+**Independent** from `shell command` like `certbot`.   
 
 ### Run ACME. 
 request issue of certificate by DNS-01.
@@ -60,11 +62,11 @@ composer:
     "acmephp/core": "^2.1",
     "ext-openssl": "*"
 ```
-Fiber used. php8.1 required. waiting dns update uses Fiber.
+Fiber used. To use Fiber php8.1 required. Fiber used in waiting dns update.
 ## Requirements
 To Check DNS TXT recoed updated.
 - This package requires `Outbound UDP/53 are opened`.
-- This package uses `dig` command needed to query DNS SOA/NS/TXT.
+- This package uses `dig` command, dig need to be installed for DNS SOA/NS/TXT.
 
 ## Future Plan
 
