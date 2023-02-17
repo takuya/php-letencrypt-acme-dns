@@ -62,6 +62,7 @@ class AcmePHPWrapper {
     $challenges = $this->dnsChallengeInCertOrder();
     $tasks = [];
     foreach ( $challenges as $domain=>$item ) {
+      // todo 依存を切る
       $tasks[$domain] = new DNSChallengeTask($item,$this);
     }
     return $tasks;
