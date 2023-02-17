@@ -37,10 +37,11 @@ $cert_and_a_key = $cli->orderNewCert();
 /** ********
  * Save in your own way.
  */
-$cert_pem  = $cert_and_a_key->toArray()['certificate'];
-$cert_pkey = $cert_and_a_key->toArray()['private_key'];//domain pkey, not an owner's key.
-$full_chain = implode(PHP_EOL,[$cert_pem, ...$cert_and_a_key->toArray()['intermediates']]);
-$cert_info = new SSLCertificateInfo( $cert_pem );
+$cert_pem  = $cert_and_a_key->cert();
+$cert_pkey = $cert_and_a_key->privKey();//domain pkey, not an owner's key.
+$full_chain = $cert_and_a_key->fullChain();
+$pkcs12     = $cert_and_a_key->pkcs12('enc pass');
+$cert_info = new SSLCertificateInfo( $cert_and_a_key->cert(); );
 ```
 
 ## Installation.
