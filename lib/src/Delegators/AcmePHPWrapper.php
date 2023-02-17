@@ -19,6 +19,7 @@ use Takuya\LEClientDNS01\AcmeDns01Record;
 use AcmePhp\Core\Protocol\AuthorizationChallenge;
 use Takuya\LEClientDNS01\DNSChallengeTask;
 use Takuya\LEClientDNS01\PKey\CSRSubject;
+use Takuya\LEClientDNS01\LetsEncryptACMEServer;
 
 class AcmePHPWrapper {
 
@@ -29,7 +30,7 @@ class AcmePHPWrapper {
   protected \AcmePhp\Core\Protocol\CertificateOrder $challenges;
   protected \AcmePhp\Core\Protocol\CertificateOrder $order;
   
-  public function __construct ( $user_private_key, $directory_url = LetsEncryptServer::STAGING ) {
+  public function __construct ( $user_private_key, $directory_url = LetsEncryptACMEServer::STAGING ) {
     $this->owner_pkey = new AsymmetricKey( $user_private_key );
     $this->acme_php = $this->initialize_acme_client( $directory_url );
   }
