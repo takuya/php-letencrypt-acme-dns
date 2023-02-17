@@ -15,7 +15,7 @@ class LetsEncryptAcmeDNS {
   protected $logger;
   
   public function __construct (
-    public string            $priv_key,
+    public string            $owner_priv_key,
     public string            $owner_email,
     protected array          $domain_names,
     public DnsPluginContract $dns,
