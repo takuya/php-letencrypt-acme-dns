@@ -85,7 +85,7 @@ DNS-01 plugins above example.
 | example.**tld** | cloudflare       | cloudflare_token |
 | example.**biz** | your_own_plugnin | your_own_key |
 
-You can use Multiple Domain DNS Server API to complete Let's Encrypt ACME challenge.
+You can use Multiple Domain DNS Server API to complete LE ACME challenge.
 
 ```php
 <?php
