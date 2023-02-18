@@ -136,6 +136,7 @@ php: >=8.1
 composer:
     "cloudflare/sdk": "^1.3",
     "acmephp/core": "^2.1",
+    "pear/net_dns2": "^1.5",
     "ext-openssl": "*"
 ```
 Fiber used. To use Fiber php8.1 required. Fiber used in waiting dns update.
