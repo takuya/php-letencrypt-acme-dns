@@ -78,7 +78,7 @@ For example , Cert with two domain in SAN.
 |commonName| example.tld                              | 
 |subjectAltName| DNS:example.**tld**, DNS:example.**biz** |
 
-DNS-01 plugins above example.
+DNS-01 plugins for above.
 
 | Base Domain     | DNS        | plugin  | 
 |-----------------|------------|---------|
