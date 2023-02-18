@@ -96,7 +96,7 @@ $dns_plugin_2 = new YourOwnPlugin( 'your_own_key', 'example.biz' );
 $cli->setDnsPlugin( $dns_plugin_1, 'example.tld' );
 $cli->setDnsPlugin( $dns_plugin_2, 'example.biz' );
 ```
-## How to rite your Own DNS Plugin. 
+## How to write your Own DNS Plugin. 
 Create class and extends `DNSPlugin` class.
 ```php
 class YourOwnPlugin extends DNSPlugin{
