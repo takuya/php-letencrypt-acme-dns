@@ -25,7 +25,7 @@ class SSLCertificateInfo {
   
   public function __construct ( $cert ) {
     $arr = openssl_x509_parse( $cert, false );
-    if ($arr==-false){
+    if ($arr===false){
       throw new \InvalidArgumentException('not a valid cert');
     }
     $this->name = $arr["name"];
