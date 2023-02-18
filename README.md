@@ -29,7 +29,7 @@ $owner_pkey   = new AsymmetricKey();// user's pkey, not a domain cert  pkey.
 /** ********
  * Order certificate.
  */
-$dns = new CloudflareDNSRecord( $cf_api_token, base_domain($domain_names[0]) );
+$dns = new CloudflareDNSPlugin( $cf_api_token, base_domain($domain_names[0]) );
 $cli = new LetsEncryptAcmeDNS( $owner_pkey, $your_email );
 $cli->setDomainNames( $domain_names );
 $cli->setAcmeURL( LetsEncryptACMEServer::PROD );
