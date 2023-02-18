@@ -68,7 +68,7 @@ $cli->setDomainNames( ['www.first.tld','www.second.tld'] );
 ```
 
 
-### Example Two of DNS server 
+### Example Two of Two DNS server 
 If you uses two dns server , you can set dns per domain.
 
 For example , Cert with two domain in SAN.
