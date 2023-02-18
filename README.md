@@ -31,7 +31,10 @@ $acme_uri     = LetsEncryptACMEServer::STAGING
  * Order certificate.
  */
 $dns = new CloudflareDNSRecord( $cf_api_token, base_domain($domain_names[0]) );
-$cli = new LetsEncryptAcmeDNS( $owner_pkey, $your_email, $domain_names, $dns, $acme_uri );
+$cli = new LetsEncryptAcmeDNS( $owner_pkey, $your_email );
+$cli->setDomainNames( $domain_names );
+$cli->setAcmeURL( LetsEncryptACMEServer::PROD );
+$cli->setDnsPlugin( $dns );
 $cert_and_a_key = $cli->orderNewCert();
 
 /** ********
@@ -43,6 +46,55 @@ $full_chain = $cert_and_a_key->fullChain();
 $pkcs12     = $cert_and_a_key->pkcs12('enc pass');
 $cert_info = new SSLCertificateInfo( $cert_and_a_key->cert(); );
 ```
+## Example Two of DNS server
+If you uses two dns server , you can set dns per domain.
+
+For example , to issie two domain in SAN.
+
+| cert | domain                                   |
+|---|------------------------------------------|
+|commonName| example.tld                              | 
+|subjectAltName| DNS:example.**tld**, DNS:example.**biz** |
+
+DNS-01 plugins above example.
+
+| Base Domain     | Plugin           |API Key |
+|-----------------|------------------|---|
+| example.**tld** | cloudflare       | cloudflare_token |
+| example.**biz** | your_own_plugnin | your_own_key |
+
+You can use Multiple Domain update API to complete Let's Encrypt ACME challenge.
+
+```php
+<?php
+// set dns plugin per Domain.
+$cli = new LetsEncryptAcmeDNS( 'priv_key_pem', 'your_email@gmail.com' );
+$dns_plugin_1 = new CloudflareDNSPlugin( 'cloudflare_token', 'example.tld' );
+$dns_plugin_2 = new YourOwnPlugin( 'your_own_key', 'example.biz' );
+$cli->setDnsPlugin( $dns_plugin_1, 'example.tld' );
+$cli->setDnsPlugin( $dns_plugin_2, 'example.biz' );
+```
+## How to rite your Own DNS Plugin. 
+Create class and extends `DNSPlugin` class.
+```php
+class YourOwnPlugin extends DNSPlugin{
+
+}
+```
+Then, complete implementation by your update method.
+```php
+class YourOwnPlugin extends DNSPlugin{
+  public function addDnsTxtRecord ( $domain, $content ): bool;{
+    // TODO: write your way to add TXT Record for ACME challenge.
+  }
+  
+  public  function removeTxtRecord ( $domain, $content ): bool{
+    // TODO: Write your way , how to remove TXT Record , after ACME.
+  }
+}
+
+```
+
 
 ## Installation.
 

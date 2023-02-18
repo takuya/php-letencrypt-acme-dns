@@ -25,6 +25,9 @@ class CloudflareDNSPlugin extends DNSPlugin {
   }
   
   public function removeTxtRecord ( $domain, $content = null ): bool {
+    if (empty($domain)){
+      throw new \InvalidArgumentException("no domain agument.");
+    }
     if ( $content == null ) {
       $txt_record = ['name' => $domain, 'type' => 'TXT', 'content' => $content];
       while ( $this->cloudflareWrapper->isExists( ...$txt_record ) ) {

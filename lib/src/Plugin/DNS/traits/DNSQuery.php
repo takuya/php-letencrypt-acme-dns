@@ -3,7 +3,9 @@
 namespace Takuya\LEClientDNS01\Plugin\DNS\traits;
 
 trait DNSQuery {
-  public function query ( $name, $type ) {
+  public function query ( $name, $type ): string {
+    $type = strtoupper( $type );
+    //
     try {
       // check ns.
       $ns = \domain_ns( $name );
@@ -14,7 +16,7 @@ trait DNSQuery {
         $ns = $authority_nameserver_ips[0];
       }
       // check record
-      $r = new \Net_DNS2_Resolver( ['nameservers' => [$ns], 'timeout' => 1] );
+      $r = new \Net_DNS2_Resolver( ['nameservers' => [$ns], 'timeout' => 5] );
       $result = $r->query( $name, $type );
       $content = implode( PHP_EOL, array_map( fn( $e ) => implode( PHP_EOL, $e->text ), $result->answer ) );
       return $content;

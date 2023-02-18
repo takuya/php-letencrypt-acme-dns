@@ -30,7 +30,9 @@ class LetsEncryptAcmeDNS {
     $this->plugins[$target_domain_name] =$dns;
   }
   public function getDnsPlugin(string $target_domain_name='default'){
-    return $this->plugins[$target_domain_name]??$this->plugins['default'];
+    return $this->plugins[$target_domain_name]
+      ?? $this->plugins[base_domain( $target_domain_name )]
+      ?? $this->plugins['default'];
   }
   public function setAcmeURL($acme_uri = LetsEncryptACMEServer::STAGING){
     $this->acme_uri = $acme_uri;
