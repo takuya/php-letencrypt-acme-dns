@@ -8,32 +8,48 @@ use Takuya\LEClientDNS01\Delegators\AcmePHPWrapper;
 use Takuya\LEClientDNS01\PKey\CertificateWithPrivateKey;
 use Takuya\LEClientDNS01\Plugin\DNS\DNSPlugin;
 
+
 class LetsEncryptAcmeDNS {
   
   /** @var Monolog\Logger */
   protected $logger;
   protected AcmePHPWrapper $acme_cli;
+  /** @var DnsPlugin[] */
+  protected array $plugins=[];
+  protected string $acme_uri;
+  protected array  $domain_names;
   
   public function __construct (
     public string    $owner_priv_key,
     public string    $owner_email,
-    protected array  $domain_names,
-    public DNSPlugin $dns,
-    public string    $acme_uri = LetsEncryptACMEServer::STAGING
   ) {
-    $this->domain_names = $this->validateDomainName( $domain_names );
+    $this->setAcmeURL();
     $this->acme_cli = $this->initAcmePHP( $this->acme_uri );
   }
-  
+  public function setDnsPlugin( DnsPlugin $dns, string $target_domain_name='default' ){
+    $this->plugins[$target_domain_name] =$dns;
+  }
+  public function getDnsPlugin(string $target_domain_name='default'){
+    return $this->plugins[$target_domain_name]??$this->plugins['default'];
+  }
+  public function setAcmeURL($acme_uri = LetsEncryptACMEServer::STAGING){
+    $this->acme_uri = $acme_uri;
+  }
+  public function setDomainNames(array $domain_names){
+    $this->domain_names = $this->validateDomainName( $domain_names );
+  }
   protected function validateDomainName ( $domain_names ) {
     empty( $domain_names ) && throw new \RuntimeException( 'DNS must not be empty.' );
     usort( $domain_names, function( $a, $b ) { return strlen( $a ) > strlen( $b ); } );
-    $base_name = parent_domain( $domain_names[0] );
-    $same_origin = array_filter( $domain_names, function( $e ) use ( $base_name ) {
-      return str_contains( $e, $base_name );
-    } );
-    if ( sizeof( $domain_names ) !== sizeof( $same_origin ) ) {
-      throw new \RuntimeException( 'Currently, this Library only support SAME Origin.' );
+    foreach ( $domain_names as $domain_name ) {
+      $name = $domain_name;
+      if (str_contains($name,'*.')){
+        // skip wildcard
+        $name = parent_domain($name);
+      }
+      if (!assert_str_is_domain($name)){
+        throw new \InvalidArgumentException("'$domain_name' is not valid Domain Name." );
+      }
     }
     return $domain_names;
   }
@@ -55,8 +71,18 @@ class LetsEncryptAcmeDNS {
   public function orderNewCert ( string   $domain_pkey_pem = null,
                                  callable $on_dns_wait = null ): CertificateWithPrivateKey {
     //
+    $this->isReady();
     $domain_key = $domain_pkey_pem ? new AsymmetricKey( $domain_pkey_pem ) : new AsymmetricKey();
     return $this->newOrder( $domain_key, $on_dns_wait );
+  }
+  public function isReady(){
+    if(empty($this->domain_names)){
+      throw new \LogicException('no Domain');
+    }
+    if(empty($this->plugins)){
+      throw new \LogicException('no DNS Plugin');
+    }
+    return true;
   }
   
   /**
@@ -95,7 +121,7 @@ class LetsEncryptAcmeDNS {
   protected function createChallengeTask ( array $challenges ): array {
     $tasks = [];
     foreach ( $challenges as $domain => $challenge ) {
-      $tasks[$domain] = new DNSChallengeTask( $challenge, $this->dns );
+      $tasks[$domain] = new DNSChallengeTask( $challenge, $this->getDnsPlugin($domain) );
     }
     return $tasks;
   }

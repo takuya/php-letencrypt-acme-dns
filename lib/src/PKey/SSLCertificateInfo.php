@@ -2,6 +2,8 @@
 
 namespace Takuya\LEClientDNS01\PKey;
 
+use AcmePhp\Ssl\PublicKey;
+
 class SSLCertificateInfo {
   
   public string $name;
@@ -23,6 +25,9 @@ class SSLCertificateInfo {
   
   public function __construct ( $cert ) {
     $arr = openssl_x509_parse( $cert, false );
+    if ($arr==-false){
+      throw new \InvalidArgumentException('not a valid cert');
+    }
     $this->name = $arr["name"];
     $this->subject = $arr["subject"];
     $this->hash = $arr["hash"];

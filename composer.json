@@ -9,7 +9,8 @@
     },
     "files": [
       "lib/helpers/domain_name_utils.php",
-      "lib/helpers/base64_safe.php"
+      "lib/helpers/base64_safe.php",
+      "lib/helpers/get_cert.php"
     ]
 
   },

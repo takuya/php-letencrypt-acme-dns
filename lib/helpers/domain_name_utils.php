@@ -1,5 +1,12 @@
 <?php
 
+if ( !function_exists( 'assert_str_is_domain' ) ) {
+  function assert_str_is_domain ( $name ): bool {
+    $result = filter_var( $name, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME | FILTER_NULL_ON_FAILURE );
+    return (bool)$result;
+  }
+}
+
 
 if ( !function_exists( 'base_domain' ) ) {
   function base_domain ( $domain_name ): string {
