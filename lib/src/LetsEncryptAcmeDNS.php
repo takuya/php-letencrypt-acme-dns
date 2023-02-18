@@ -77,7 +77,7 @@ class LetsEncryptAcmeDNS {
     $domain_key = $domain_pkey_pem ? new AsymmetricKey( $domain_pkey_pem ) : new AsymmetricKey();
     return $this->newOrder( $domain_key, $on_dns_wait );
   }
-  protected function isReady(): bool {
+  public function isReady(): bool {
     if(empty($this->domain_names)){
       throw new \LogicException('no Domain');
     }
