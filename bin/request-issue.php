@@ -14,17 +14,13 @@ $base_domain  = getenv( 'LE_BASE_DOMAIN' );
 $domain_names = array_slice( $argv, 1, );
 $ownerPkey = new AsymmetricKey();
 $logger       = new class {public function debug ( $mess ) { file_put_contents( "php://stderr", $mess ); }};
-$cf_dns_api   = new CloudflareDNSPlugin( $cf_token, $base_domain ?: base_domain( $domain_names[0] ) );
-$cf_dns_api->enable_dns_check_at_waiting_for_update = true;
-$params = [
-  $ownerPkey->privKey(),
-  $email,
-  $domain_names,
-  $cf_dns_api,
-  LetsEncryptACMEServer::PROD
-];
-$cli = new LetsEncryptAcmeDNS( ...$params );
+$dns_plugin   = new CloudflareDNSPlugin( $cf_token, $base_domain ?: base_domain( $domain_names[0] ) );
+//
+$cli = new LetsEncryptAcmeDNS( $ownerPkey->privKey(),$email );
+$cli->setAcmeURL(LetsEncryptACMEServer::PROD);
 $cli->setLogger( $logger );
+$cli->setDomainNames($domain_names);
+$cli->setDnsPlugin($dns_plugin);
 //
 $cert_and_a_key = $cli->orderNewCert();
 $info = new SSLCertificateInfo( $cert_and_a_key->cert() );
