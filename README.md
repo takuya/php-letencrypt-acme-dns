@@ -103,7 +103,7 @@ class YourOwnPlugin extends DNSPlugin{
 
 }
 ```
-Then, complete implementation by your update method.
+Then, complete implementation by your code to update DNS server.
 ```php
 class YourOwnPlugin extends DNSPlugin{
   public function addDnsTxtRecord ( $domain, $content ): bool;{
