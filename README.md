@@ -14,7 +14,7 @@ export LE_EMAIL='yourname@example.tld'
 php bin/request-issue.php 'aab.example.tld' 'aaa.example.tld'
 ```
 
-### EXAMPLE.
+### EXAMPLE
 In you php code.
 ```php
 <?php
@@ -26,7 +26,6 @@ $cf_api_token = getenv( 'LE_CLOUDFLARE_TOKEN' );
 $your_email   = getenv( 'LE_EMAIL' );
 $domain_names = ["www.your-domain.tld",'*.www.your-domain.tld'];
 $owner_pkey   = new AsymmetricKey();// user's pkey, not a domain cert  pkey.
-$acme_uri     = LetsEncryptACMEServer::STAGING
 /** ********
  * Order certificate.
  */
@@ -46,7 +45,30 @@ $full_chain = $cert_and_a_key->fullChain();
 $pkcs12     = $cert_and_a_key->pkcs12('enc pass');
 $cert_info = new SSLCertificateInfo( $cert_and_a_key->cert(); );
 ```
-## Example Two of DNS server
+### More cases.
+
+
+#### WildCard name. 
+```php
+$cli->setDomainNames( ['*.your-domain.tld'] );
+```
+#### Single name
+```php
+$cli->setDomainNames( ['www.your-domain.tld'] );
+```
+
+#### Multiple sub domain
+```php
+$cli->setDomainNames( ['www.your-domain.tld','ipsec.your-domain.tld'] );
+```
+
+#### Multi , different BASE 
+```php
+$cli->setDomainNames( ['www.first.tld','www.second.tld'] );
+```
+
+
+### Example Two of DNS server 
 If you uses two dns server , you can set dns per domain.
 
 For example , to issie two domain in SAN.
@@ -89,7 +111,7 @@ class YourOwnPlugin extends DNSPlugin{
   }
   
   public  function removeTxtRecord ( $domain, $content ): bool{
-    // TODO: Write your way , how to remove TXT Record , after ACME.
+    // TODO: Write in your way, how to remove TXT Record , after ACME.
   }
 }
 
