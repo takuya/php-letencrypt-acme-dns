@@ -21,4 +21,20 @@ class CertTestCase extends TestCase {
     $cf->enable_dns_check_at_waiting_for_update = true;
     return $cf;
   }
+  protected function setUp (): void {
+    parent::setUp();
+    $env_keys = [
+      'base_domain' => 'LE_BASE_DOMAIN1',
+      'cf_api_token' => 'LE_CLOUDFLARE_TOKEN1',
+      'base_domain1' => 'LE_BASE_DOMAIN1',
+      'cf_api_token1' => 'LE_CLOUDFLARE_TOKEN2',
+      'base_domain2' => 'LE_BASE_DOMAIN2',
+      'cf_api_token2' => 'LE_CLOUDFLARE_TOKEN2',
+      'email' => 'LE_SAMPLE_EMAIL',
+    ];
+    foreach ( $env_keys as $name => $env_key ) {
+      $this->{$name} = getenv( $env_key );
+    }
+  }
+  
 }
