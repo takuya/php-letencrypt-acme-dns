@@ -80,10 +80,10 @@ For example , Cert with two domain in SAN.
 
 DNS-01 plugins above example.
 
-| Base Domain     | Plugin           |API Key |
-|-----------------|------------------|---|
-| example.**tld** | cloudflare       | cloudflare_token |
-| example.**biz** | your_own_plugnin | your_own_key |
+| Base Domain     | DNS        | plugin  | 
+|-----------------|------------|---------|
+| example.**tld** | cloudflare | CloudflareDNSPlugin|
+| example.**biz** | your_own   |YourOwnPlugin|
 
 You can use Multiple Domain DNS Server API to complete LE ACME challenge.
 
