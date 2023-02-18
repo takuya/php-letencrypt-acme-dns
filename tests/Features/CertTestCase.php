@@ -11,6 +11,13 @@ use Takuya\RandomString\RandomString;
 
 class CertTestCase extends TestCase {
   use AssertCertificate;
+  protected string $base_domain;
+  protected string $cf_api_token;
+  protected string $base_domain1;
+  protected string $cf_api_token1;
+  protected string $base_domain2;
+  protected string $cf_api_token2;
+  protected string $email;
   
   protected function getInstanceLetsEncryptAcmeDNS (): LetsEncryptAcmeDNS {
     return new LetsEncryptAcmeDNS( (new AsymmetricKey())->privKey(), $this->email );
