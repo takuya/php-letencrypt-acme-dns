@@ -5,6 +5,7 @@ namespace tests\Units;
 use tests\TestCase;
 use Takuya\LEClientDNS01\PKey\SSLCertificateInfo;
 use tests\assertions\AssertCertificate;
+use function Takuya\Utils\get_certificate;
 
 class SSLCertificateInfoTest extends TestCase {
   use AssertCertificate;
