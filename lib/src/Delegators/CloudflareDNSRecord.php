@@ -2,6 +2,8 @@
 
 namespace Takuya\LEClientDNS01\Delegators;
 
+use function Takuya\Utils\base_domain;
+
 class CloudflareDNSRecord {
   protected string $zone_id;
   protected \Cloudflare\API\Endpoints\DNS $cli;

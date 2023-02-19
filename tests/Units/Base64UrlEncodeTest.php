@@ -3,6 +3,8 @@
 namespace tests\Units;
 
 use tests\TestCase;
+use function Takuya\Utils\base64_url_encode;
+use function Takuya\Utils\base64_url_decode;
 
 class Base64UrlEncodeTest extends TestCase {
   

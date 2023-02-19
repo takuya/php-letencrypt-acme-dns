@@ -1,6 +1,7 @@
 <?php
+namespace Takuya\Utils;
 
-if ( !function_exists( 'assert_str_is_domain' ) ) {
+if ( !function_exists( __NAMESPACE__.'\assert_str_is_domain' ) ) {
   function assert_str_is_domain ( string $name ): bool {
     $result = filter_var( $name, FILTER_VALIDATE_DOMAIN, FILTER_FLAG_HOSTNAME | FILTER_NULL_ON_FAILURE );
     return (bool)$result;
@@ -8,7 +9,7 @@ if ( !function_exists( 'assert_str_is_domain' ) ) {
 }
 
 
-if ( !function_exists( 'base_domain' ) ) {
+if ( !function_exists( __NAMESPACE__.'\base_domain' ) ) {
   function base_domain ( $domain_name ): string {
     $chunk = explode( '.', $domain_name );
     if ( sizeof( $chunk ) > 2 ) {
@@ -18,14 +19,14 @@ if ( !function_exists( 'base_domain' ) ) {
     }
   }
 }
-if ( !function_exists( 'sub_domain' ) ) {
+if ( !function_exists( __NAMESPACE__.'\sub_domain' ) ) {
   function sub_domain ( $domain_name ): string {
     $base_domain = base_domain( $domain_name );
     $sub_domain = str_replace( ".{$base_domain}", '', $domain_name );
     return $sub_domain;
   }
 }
-if ( !function_exists( 'domain_ns' ) ) {
+if ( !function_exists( __NAMESPACE__.'\domain_ns' ) ) {
   function domain_ns ( $domain_name ) {
     $chunk = explode( '.', $domain_name );
     while ( sizeof( $chunk ) > 1 ) {
@@ -42,7 +43,7 @@ if ( !function_exists( 'domain_ns' ) ) {
     return null;
   }
 }
-if ( !function_exists( 'parent_domain' ) ) {
+if ( !function_exists( __NAMESPACE__.'\parent_domain' ) ) {
   function parent_domain ( $domain_name ): string {
     $chunk = explode( '.', $domain_name );
     $parent_domain = implode( '.', array_slice( $chunk, 1 ) );

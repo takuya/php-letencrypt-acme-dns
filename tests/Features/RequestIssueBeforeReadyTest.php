@@ -1,13 +1,13 @@
 <?php
 
-namespace tests\Units;
+namespace tests\Features;
 
 use tests\TestCase;
 use Takuya\LEClientDNS01\LetsEncryptAcmeDNS;
 use Takuya\LEClientDNS01\PKey\AsymmetricKey;
 use Takuya\LEClientDNS01\Plugin\DNS\CloudflareDNSPlugin;
 
-class RequestIssueBeforeReadyTest extends TestCase {
+class RequestIssueBeforeReadyTest extends CertTestCase {
   
   public function test_get_ready_status_request_issue_cert () {
     $ownerPkey = new AsymmetricKey();

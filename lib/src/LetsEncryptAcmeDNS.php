@@ -7,6 +7,9 @@ use Takuya\LEClientDNS01\PKey\CSRSubject;
 use Takuya\LEClientDNS01\Delegators\AcmePHPWrapper;
 use Takuya\LEClientDNS01\PKey\CertificateWithPrivateKey;
 use Takuya\LEClientDNS01\Plugin\DNS\DNSPlugin;
+use function Takuya\Utils\base_domain;
+use function Takuya\Utils\parent_domain;
+use function Takuya\Utils\assert_str_is_domain;
 
 
 class LetsEncryptAcmeDNS {

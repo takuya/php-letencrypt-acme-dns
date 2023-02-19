@@ -2,6 +2,8 @@
 
 namespace Takuya\LEClientDNS01;
 
+use function Takuya\Utils\base64_url_encode;
+
 class AcmeDns01Record {
   const ACME_PREFIX = "_acme-challenge";
   
@@ -16,7 +18,7 @@ class AcmeDns01Record {
   }
   
   public function acme_content (): string {
-    return \base64_url_encode( hash( 'sha256', $this->payload, true ) );
+    return base64_url_encode( hash( 'sha256', $this->payload, true ) );
   }
   
   
