@@ -12,7 +12,7 @@ class CloudflarePluginTest extends CertTestCase {
     $pair1 =[$this->base_domain1, $this->cf_api_token1];
     $pair2 =[$this->base_domain2, $this->cf_api_token2];
     //dump([$pair1,$pair2]);
-    [$base_domain,$token] = $pair2;
+    [$base_domain,$token] = $pair1;
     $cf = new CloudflareDNSPlugin($token,$base_domain);
     //
     [$name,$content] = [
@@ -22,7 +22,6 @@ class CloudflarePluginTest extends CertTestCase {
     // add.
     $cf->addDnsTxtRecord($name,$content);
     $cf->waitForUpdated($name,'txt',$content);
-    sleep(1);//extra wait.
     $this->assertEquals($content,$cf->query($name,'txt'));
     // remove.
     $cf->removeTxtRecord($name,$content);
