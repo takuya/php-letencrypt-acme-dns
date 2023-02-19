@@ -129,6 +129,10 @@ composer require takuya/$repository:master
 composer install
 ```
 
+From composer packagist
+```bash
+composer require takuya/php-letencrypt-acme-dns
+```
 
 
 ## dependencies
