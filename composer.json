@@ -3,7 +3,7 @@
   "description": "acme v2 to Let'sEncrypt by dns cloudflare or your own.",
   "type": "library",
   "license": "GPL-3.0-later",
-  "version": "1.0",
+  "version": "1.0.0",
   "keywords": [
     "acme-client",
     "pure-php",
