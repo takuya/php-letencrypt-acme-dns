@@ -1,5 +1,5 @@
 {
-  "name": "takuya/php-letencrypt-cloudflare-dns",
+  "name": "takuya/php-letencrypt-acme-dns",
   "description": "acmev2 to letsencrypt by dns cloudflare",
   "type": "library",
   "license": "GPL-3.0-LATER",
@@ -12,7 +12,6 @@
       "lib/helpers/base64_safe.php",
       "lib/helpers/get_cert.php"
     ]
-
   },
   "autoload-dev": {
     "psr-4": {
