@@ -2,7 +2,7 @@
 
 This Library helps us to obtain Let's Encrypt SSLCertificate with DNS-01 ACMEv2.
 
-This is **Pure-PHP** , For embedded to WEB PHP-App (ex. laravel). 
+This is **Pure-PHP** , intend to be LE embedded into WEB PHP-App (ex. laravel). 
 
 **Independent** from `shell command` like `certbot`.   
 
@@ -122,9 +122,10 @@ class YourOwnPlugin extends DNSPlugin{
 
 From GitHub.
 ```bash
-composer config repositories.'php-letencrypt-cloudflare-dns' \
-vcs https://github.com/takuya/'php-letencrypt-cloudflare-dns'  
-composer require takuya/'php-letencrypt-cloudflare-dns':master
+repository='php-letencrypt-acme-dns'
+composer config repositories.$repository \
+vcs https://github.com/takuya/$repository  
+composer require takuya/$repository:master
 composer install
 ```
 
