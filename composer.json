@@ -2,7 +2,7 @@
   "name": "takuya/php-letencrypt-acme-dns",
   "description": "acme v2 to Let'sEncrypt by dns cloudflare or your own.",
   "type": "library",
-  "license": "GPL-3.0-later",
+  "license": "GPL-3.0-or-later",
   "version": "1.0.0",
   "keywords": [
     "acme-client",
