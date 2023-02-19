@@ -7,7 +7,12 @@
          enforceTimeLimit="true"
          timeoutForLargeTests="360"
          timeoutForSmallTests="12"
-
+         stopOnFailure="true"
+         stopOnError="true"
+         processIsolation="true"
+         displayDetailsOnIncompleteTests="true"
+         displayDetailsOnTestsThatTriggerWarnings="true"
+         displayDetailsOnTestsThatTriggerDeprecations="true"
 >
     <testsuites>
         <testsuite name="Unit">
