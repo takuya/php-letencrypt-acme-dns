@@ -77,8 +77,9 @@ class LetsEncryptAcmeDNS {
                                  callable $on_dns_wait = null ): CertificateWithPrivateKey {
     //
     $this->isReady();
-    $domain_key = $domain_pkey_pem ? new AsymmetricKey( $domain_pkey_pem ) : new AsymmetricKey();
-    return $this->newOrder( $domain_key, $on_dns_wait );
+    return $this->newOrder(
+      $domain_pkey_pem ? new AsymmetricKey( $domain_pkey_pem ) : new AsymmetricKey(),
+      $on_dns_wait );
   }
   public function isReady(): bool {
     if(empty($this->domain_names)){
@@ -139,8 +140,7 @@ class LetsEncryptAcmeDNS {
   /**
    * @throws \Throwable
    */
-  protected function processDNSTask ( $challenges, $on_wait ): void {
-    /** @var \Fiber[] $fibers */
+  protected function processDNSTask ( $challenges, $on_each_wait_from_user ): void {
     $fibers = [];
     foreach ( $challenges as $key => $challenge ) {
       //
@@ -152,6 +152,11 @@ class LetsEncryptAcmeDNS {
     }
     // start
     foreach ( $challenges as $key => $challenge ) {
+      $on_wait = function( $name, $type, $content ) use ( $on_each_wait_from_user ) {
+        \Fiber::suspend( $content );
+        $on_each_wait_from_user && $on_each_wait_from_user( $name, $type, $content );
+      };
+      /** @var \Fiber[] $fibers */
       $fibers[$key]->start( $challenge, $on_wait );
     }
     // wait

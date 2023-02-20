@@ -37,12 +37,7 @@ class DNSChallengeTask {
     }
   }
   
-  protected function waitDNS ( callable $on_wait_from_user = null ): void {
-    $on_each_wait = function( $name, $type, $content ) use ( $on_wait_from_user ) {
-      \Fiber::suspend( $content );
-      $on_wait_from_user && $on_wait_from_user( $name, $type, $content );
-    };
-    
+  protected function waitDNS ( callable $on_each_wait = null ): void {
     foreach ( $this->records as $record ) {
       $this->dns->waitForUpdated( $record->acme_domain_name(), 'TXT', $record->acme_content(), $on_each_wait );
     }
