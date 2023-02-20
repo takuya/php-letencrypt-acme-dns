@@ -43,7 +43,7 @@ if ( !function_exists( __NAMESPACE__.'\dns_resolve' ) ) {
         return '';
       }
       if ( Net_DNS2_Lookups::E_NS_SOCKET_FAILED == $e->getCode() ) {
-        printf( 'Network Error. Check outbound udp/53' );
+        printf( 'Network Error. Check outbound udp/53 opened.' );
         throw $e;
       }
       throw $e;
