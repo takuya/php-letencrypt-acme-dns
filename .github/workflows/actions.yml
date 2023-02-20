@@ -35,6 +35,15 @@ jobs:
         shell: bash
         run : |
           vendor/bin/phpunit --filter Unit
+      - name : FeatureTest reqesut issue of certificate
+        shell: bash
+        run : |
+          export LE_CLOUDFLARE_TOKEN1=${{ secrets.LE_CLOUDFLARE_TOKEN1 }}
+          export LE_CLOUDFLARE_TOKEN2=${{ secrets.LE_CLOUDFLARE_TOKEN2 }}
+          export LE_BASE_DOMAIN1=${{ secrets.LE_BASE_DOMAIN1 }}
+          export LE_BASE_DOMAIN2=${{ secrets.LE_BASE_DOMAIN2 }}
+          echo $LE_CLOUDFLARE_TOKEN1;
+
       - name : log
         shell: bash
         run : |
