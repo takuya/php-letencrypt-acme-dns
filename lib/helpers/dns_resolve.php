@@ -18,11 +18,11 @@ if ( !function_exists( __NAMESPACE__.'\dns_resolve' ) ) {
   function dns_resolve ( string $name, string $type ): string {
     $type = strtoupper( $type );
     $ns_server = domain_ns( $name );
-    $ns_server = assert_ipv4_address( $ns_server ) ? [$ns_server]
+    $ns_server_ips = assert_ipv4_address( $ns_server ) ? [$ns_server]
       : array_map( fn( $e ) => $e['ip'], dns_get_record( $ns_server, DNS_A ) );
     
     try {
-      $resolver = new Net_DNS2_Resolver( ['nameservers' => $ns_server, 'timeout' => 5] );
+      $resolver = new Net_DNS2_Resolver( ['nameservers' => $ns_server_ips, 'timeout' => 5] );
       $result = $resolver->query( $name, $type );
       $content = match ( $type ) {
         "A" => array_map( fn( $e ) => $e->address, $result->answer ),
