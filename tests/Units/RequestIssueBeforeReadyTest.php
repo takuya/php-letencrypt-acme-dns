@@ -1,11 +1,11 @@
 <?php
 
-namespace tests\Features;
+namespace tests\Units;
 
-use tests\TestCase;
 use Takuya\LEClientDNS01\LetsEncryptAcmeDNS;
 use Takuya\LEClientDNS01\PKey\AsymmetricKey;
 use Takuya\LEClientDNS01\Plugin\DNS\CloudflareDNSPlugin;
+use tests\Features\CertTestCase;
 
 class RequestIssueBeforeReadyTest extends CertTestCase {
   
