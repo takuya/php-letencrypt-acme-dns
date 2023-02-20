@@ -43,7 +43,7 @@ jobs:
           export LE_BASE_DOMAIN1=${{ secrets.LE_BASE_DOMAIN1 }}
           export LE_BASE_DOMAIN2=${{ secrets.LE_BASE_DOMAIN2 }}
           vendor/bin/phpunit --filter CloudflarePluginTest
-      - name : FeatureTest reqesut issue of certificate
+      - name : FeatureTest Wildcard
         shell: bash
         run : |
           export LE_CLOUDFLARE_TOKEN1=${{ secrets.LE_CLOUDFLARE_TOKEN1 }}
@@ -51,8 +51,15 @@ jobs:
           export LE_BASE_DOMAIN1=${{ secrets.LE_BASE_DOMAIN1 }}
           export LE_BASE_DOMAIN2=${{ secrets.LE_BASE_DOMAIN2 }}
           vendor/bin/phpunit --filter WildcardCertificateTest
-
-      - name : log
+      - name : FeatureTest Two Plugin
+        shell: bash
+        run : |
+          export LE_CLOUDFLARE_TOKEN1=${{ secrets.LE_CLOUDFLARE_TOKEN1 }}
+          export LE_CLOUDFLARE_TOKEN2=${{ secrets.LE_CLOUDFLARE_TOKEN2 }}
+          export LE_BASE_DOMAIN1=${{ secrets.LE_BASE_DOMAIN1 }}
+          export LE_BASE_DOMAIN2=${{ secrets.LE_BASE_DOMAIN2 }}
+          vendor/bin/phpunit --filter TwoPluginDNSCertificateTest
+      - name : Write a log.
         shell: bash
         run : |
           date -I > last-tested.txt
