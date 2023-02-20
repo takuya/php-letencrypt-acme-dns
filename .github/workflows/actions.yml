@@ -16,9 +16,69 @@ jobs:
           php -v
           mkdir -p sample/bin
           cd sample
-          composer require takuya/php-letencrypt-acme-dns
+          composer require takuya/php-letencrypt-acme-dns -q --no-ansi --no-interaction --no-progress
           cp vendor/takuya/php-letencrypt-acme-dns/bin/request-issue.php ./bin
           export LE_CLOUDFLARE_TOKEN=${{ secrets.LE_CLOUDFLARE_TOKEN1 }}
           export LE_BASE_DOMAIN=${{ secrets.LE_BASE_DOMAIN1 }}
           php bin/request-issue.php sample.$LE_BASE_DOMAIN
-
+  run-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name : env_vars
+        run:
+          echo 環境変数のメモ
+          echo expected variables
+          echo LE_CLOUDFLARE_TOKEN1=6qv...zFc
+          echo LE_CLOUDFLARE_TOKEN2=K8Q...Pbh
+          echo LE_BASE_DOMAIN1=.biz
+          echo LE_BASE_DOMAIN2=.com
+          echo imported variables.
+          echo LE_CLOUDFLARE_TOKEN1=${{ secrets.LE_CLOUDFLARE_TOKEN1 }}
+          echo LE_CLOUDFLARE_TOKEN2=${{ secrets.LE_CLOUDFLARE_TOKEN2 }}
+          echo LE_BASE_DOMAIN1=${{ secrets.LE_BASE_DOMAIN1 }}
+          echo LE_BASE_DOMAIN2=${{ secrets.LE_BASE_DOMAIN2 }}
+      - name : composer install
+        shell: bash
+        run : |
+          php -v
+          composer install  -q --no-ansi --no-interaction --no-progress
+      - name : UnitTest
+        shell: bash
+        run : |
+          vendor/bin/phpunit --filter Unit
+      - name : FeatureTest CloudfFlare DNS
+        shell: bash
+        run : |
+          export LE_CLOUDFLARE_TOKEN1=${{ secrets.LE_CLOUDFLARE_TOKEN1 }}
+          export LE_CLOUDFLARE_TOKEN2=${{ secrets.LE_CLOUDFLARE_TOKEN2 }}
+          export LE_BASE_DOMAIN1=${{ secrets.LE_BASE_DOMAIN1 }}
+          export LE_BASE_DOMAIN2=${{ secrets.LE_BASE_DOMAIN2 }}
+          vendor/bin/phpunit --filter CloudflarePluginTest
+      - name : FeatureTest Wildcard
+        shell: bash
+        run : |
+          export LE_CLOUDFLARE_TOKEN1=${{ secrets.LE_CLOUDFLARE_TOKEN1 }}
+          export LE_CLOUDFLARE_TOKEN2=${{ secrets.LE_CLOUDFLARE_TOKEN2 }}
+          export LE_BASE_DOMAIN1=${{ secrets.LE_BASE_DOMAIN1 }}
+          export LE_BASE_DOMAIN2=${{ secrets.LE_BASE_DOMAIN2 }}
+          vendor/bin/phpunit --filter WildcardCertificateTest
+      - name : FeatureTest TwoPlugins
+        shell: bash
+        run : |
+          export LE_CLOUDFLARE_TOKEN1=${{ secrets.LE_CLOUDFLARE_TOKEN1 }}
+          export LE_CLOUDFLARE_TOKEN2=${{ secrets.LE_CLOUDFLARE_TOKEN2 }}
+          export LE_BASE_DOMAIN1=${{ secrets.LE_BASE_DOMAIN1 }}
+          export LE_BASE_DOMAIN2=${{ secrets.LE_BASE_DOMAIN2 }}
+          vendor/bin/phpunit --filter TwoPluginDNSCertificateTest
+      - name : Write a log.
+        shell: bash
+        run : |
+          date -I > last-tested.txt
+      - name: push updated lists
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: update tested date.
