@@ -140,7 +140,7 @@ class LetsEncryptAcmeDNS {
   /**
    * @throws \Throwable
    */
-  protected function processDNSTask ( $challenges, $on_each_wait_from_user ): void {
+  protected function processDNSTask ( $challenges, $on_wait_from_user ): void {
     $fibers = [];
     foreach ( $challenges as $key => $challenge ) {
       //
@@ -152,9 +152,9 @@ class LetsEncryptAcmeDNS {
     }
     // start
     foreach ( $challenges as $key => $challenge ) {
-      $on_wait = function( $name, $type, $content ) use ( $on_each_wait_from_user ) {
+      $on_wait = function( $name, $type, $content ) use ( $on_wait_from_user ) {
         \Fiber::suspend( $content );
-        $on_each_wait_from_user && $on_each_wait_from_user( $name, $type, $content );
+        $on_wait_from_user( $name, $type, $content );
       };
       /** @var \Fiber[] $fibers */
       $fibers[$key]->start( $challenge, $on_wait );
