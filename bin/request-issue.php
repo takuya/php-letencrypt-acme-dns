@@ -32,13 +32,13 @@ $cf_token = getenv( 'LE_CLOUDFLARE_TOKEN' );
 $email = getenv( 'LE_EMAIL' ) ?: '';
 $domain_names = filter_argv( $argv )['args'];
 $base_domain = getenv( 'LE_BASE_DOMAIN' ) ?: base_domain( $domain_names[0] );
+$ownerPkey = new AsymmetricKey();
+$logger = new class { public function debug ( $mess ): void { file_put_contents( "php://stderr", $mess ); } };
+$dns_plugin = new CloudflareDNSPlugin( $cf_token, $base_domain );
 $acme_server = LetsEncryptACMEServer::STAGING;
 if ( in_array( '--prod', filter_argv( $argv )['opts'] ) ) {
   $acme_server = LetsEncryptACMEServer::PROD;
 }
-$ownerPkey = new AsymmetricKey();
-$logger = new class { public function debug ( $mess ): void { file_put_contents( "php://stderr", $mess ); } };
-$dns_plugin = new CloudflareDNSPlugin( $cf_token, $base_domain ?: base_domain( $domain_names[0] ) );
 //
 $cli = new LetsEncryptAcmeDNS( $ownerPkey->privKey(), $email );
 $cli->setAcmeURL( LetsEncryptACMEServer::PROD );
