@@ -22,10 +22,10 @@ jobs:
           echo LE_BASE_DOMAIN1=.biz
           echo LE_BASE_DOMAIN2=.com
           echo imported variables.
-          echo LE_CLOUDFLARE_TOKEN1=$LE_CLOUDFLARE_TOKEN1
-          echo LE_CLOUDFLARE_TOKEN2=$LE_CLOUDFLARE_TOKEN2
-          echo LE_BASE_DOMAIN1=$LE_BASE_DOMAIN1
-          echo LE_BASE_DOMAIN2=$LE_BASE_DOMAIN2
+          echo LE_CLOUDFLARE_TOKEN1=${{ secrets.LE_CLOUDFLARE_TOKEN1 }}
+          echo LE_CLOUDFLARE_TOKEN2=${{ secrets.LE_CLOUDFLARE_TOKEN2 }}
+          echo LE_BASE_DOMAIN1=${{ secrets.LE_BASE_DOMAIN1 }}
+          echo LE_BASE_DOMAIN2=${{ secrets.LE_BASE_DOMAIN2 }}
       - name : composer install
         shell: bash
         run : |
