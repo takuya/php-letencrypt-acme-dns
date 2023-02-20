@@ -14,7 +14,7 @@ jobs:
         shell: bash
         run : |
           php -v
-          mkdir sample
+          mkdir -p sample/bin
           cd sample
           composer require takuya/php-letencrypt-acme-dns -q --no-ansi --no-interaction --no-progress
           cp vendor/takuya/php-letencrypt-acme-dns/bin/request-issue.php .
