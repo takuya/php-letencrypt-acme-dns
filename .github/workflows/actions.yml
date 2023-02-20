@@ -16,7 +16,7 @@ jobs:
           php -v
           mkdir -p sample/bin
           cd sample
-          composer require takuya/php-letencrypt-acme-dns -q --no-ansi --no-interaction --no-progress
+          composer require takuya/php-letencrypt-acme-dns
           cp vendor/takuya/php-letencrypt-acme-dns/bin/request-issue.php .
           export LE_CLOUDFLARE_TOKEN=${{ secrets.LE_CLOUDFLARE_TOKEN1 }}
           export LE_BASE_DOMAIN=${{ secrets.LE_BASE_DOMAIN1 }}
