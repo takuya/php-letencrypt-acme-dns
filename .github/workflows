@@ -1,0 +1,43 @@
+name: main
+
+on:
+  push:
+    branches:
+      - master
+  schedule:
+    - cron:  '0 11 */5 * *'
+jobs:
+  run-test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout
+        uses: actions/checkout@v3
+      - name : env_vars
+        run:
+          echo expected variables
+          echo LE_CLOUDFLARE_TOKEN1=6qv...zFc from github action secret
+          echo LE_CLOUDFLARE_TOKEN2=K8Q...Pbh from github action secret
+          echo LE_BASE_DOMAIN1=.biz
+          echo LE_BASE_DOMAIN2=.com
+          echo imported variables.
+          echo LE_CLOUDFLARE_TOKEN1=$LE_CLOUDFLARE_TOKEN1
+          echo LE_CLOUDFLARE_TOKEN2=$LE_CLOUDFLARE_TOKEN2
+          echo LE_BASE_DOMAIN1=$LE_BASE_DOMAIN1
+          echo LE_BASE_DOMAIN2=$LE_BASE_DOMAIN2
+      - name : composer install
+        shell: bash
+        run : |
+          php -v
+          composer install  -q --no-ansi --no-interaction --no-progress
+      - name : UnitTest
+        shell: bash
+        run : |
+          vendor/bin/phpunit --filter Unit
+      - name : log
+        shell: bash
+        run : |
+          date -I > last-tested.txt
+      - name: push updated lists
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: update tested date.
