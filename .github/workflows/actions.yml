@@ -5,7 +5,7 @@ on:
     branches:
       - master
   schedule:
-    - cron:  '0 11 */5 * *'
+    - cron:  '0 12 */10 * *'
 jobs:
   run-test:
     runs-on: ubuntu-latest
@@ -16,9 +16,10 @@ jobs:
         uses: actions/checkout@v3
       - name : env_vars
         run:
+          echo 環境変数のメモ
           echo expected variables
-          echo LE_CLOUDFLARE_TOKEN1=6qv...zFc from github action secret
-          echo LE_CLOUDFLARE_TOKEN2=K8Q...Pbh from github action secret
+          echo LE_CLOUDFLARE_TOKEN1=6qv...zFc
+          echo LE_CLOUDFLARE_TOKEN2=K8Q...Pbh
           echo LE_BASE_DOMAIN1=.biz
           echo LE_BASE_DOMAIN2=.com
           echo imported variables.
@@ -51,7 +52,7 @@ jobs:
           export LE_BASE_DOMAIN1=${{ secrets.LE_BASE_DOMAIN1 }}
           export LE_BASE_DOMAIN2=${{ secrets.LE_BASE_DOMAIN2 }}
           vendor/bin/phpunit --filter WildcardCertificateTest
-      - name : FeatureTest Two Plugin
+      - name : FeatureTest TwoPlugins
         shell: bash
         run : |
           export LE_CLOUDFLARE_TOKEN1=${{ secrets.LE_CLOUDFLARE_TOKEN1 }}
