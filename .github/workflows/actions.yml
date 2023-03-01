@@ -65,6 +65,7 @@ jobs:
           export LE_CLOUDFLARE_TOKEN2=${{ secrets.LE_CLOUDFLARE_TOKEN2 }}
           export LE_BASE_DOMAIN1=${{ secrets.LE_BASE_DOMAIN1 }}
           export LE_BASE_DOMAIN2=${{ secrets.LE_BASE_DOMAIN2 }}
+          export LE_SAMPLE_EMAIL=${{ secrets.LE_SAMPLE_EMAIL }}
           vendor/bin/phpunit --filter WildcardCertificateTest
       - name : FeatureTest TwoPlugins
         shell: bash
@@ -73,6 +74,7 @@ jobs:
           export LE_CLOUDFLARE_TOKEN2=${{ secrets.LE_CLOUDFLARE_TOKEN2 }}
           export LE_BASE_DOMAIN1=${{ secrets.LE_BASE_DOMAIN1 }}
           export LE_BASE_DOMAIN2=${{ secrets.LE_BASE_DOMAIN2 }}
+          export LE_SAMPLE_EMAIL=${{ secrets.LE_SAMPLE_EMAIL }}
           vendor/bin/phpunit --filter TwoPluginDNSCertificateTest
       - name : Write a log.
         shell: bash
