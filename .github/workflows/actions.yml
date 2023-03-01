@@ -5,7 +5,7 @@ on:
     branches:
       - master
   schedule:
-    - cron:  '0 12 */10 * *'
+    - cron:  '0 11 */2 * *'
 jobs:
   run-composer-bin:
     runs-on: ubuntu-latest
