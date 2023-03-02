@@ -24,14 +24,14 @@ class AcmePHPWrapper {
 
   
   protected AsymmetricKey $owner_pkey;
-  protected AcmeClient $acme_php;
+  protected string $directory_url;
   protected \AcmePhp\Ssl\CertificateResponse $certificateResponse;
   protected \AcmePhp\Core\Protocol\CertificateOrder $challenges;
   protected \AcmePhp\Core\Protocol\CertificateOrder $order;
   
   public function __construct ( $user_private_key, $directory_url = LetsEncryptACMEServer::STAGING ) {
     $this->owner_pkey = new AsymmetricKey( $user_private_key );
-    $this->acme_php = $this->initialize_acme_client( $directory_url );
+    $this->directory_url = $directory_url;
   }
   
   protected function initialize_acme_client ( $directory_url  ): AcmeClient {
@@ -47,12 +47,36 @@ class AcmePHPWrapper {
     return new AcmeClient( $httpCli, $directory_url );
   }
   
+  protected function send_request ( $name, ...$args ) {
+    /** @var \GuzzleHttp\Exception\ServerException $prev */
+    $max_retry = 10;
+    $error = null;
+    foreach ( range( 0, $max_retry - 1 ) as $tried ) {
+      try {
+        $acme_php_client = $this->initialize_acme_client( $this->directory_url );
+        return $acme_php_client->{$name}( ...$args );
+      } catch (\AcmePhp\Core\Exception\AcmeCoreServerException $error) {
+        if ( get_class($prev = $error->getPrevious()) !== \GuzzleHttp\Exception\ServerException::class){
+          throw  $error;
+        }
+        $value = $prev->getResponse()->getHeader( 'retry-after' );
+        $retry_after = !empty( $value ) ? $value[0] : 10;
+        if ( $retry_after < 120 ) {// 120sec未満なら待つ。
+          sleep( $retry_after );
+        } else {
+          throw $error;
+        }
+      }
+    }
+    throw $error;
+  }
+  
   public function newAccount ( $email ): array {
-    return $this->acme_php->registerAccount( $email );
+    return $this->send_request('registerAccount',$email);
   }
   
   public function newOrder ( array $domain_names ): void {
-    $this->order = $this->acme_php->requestOrder( $domain_names );
+    $this->order = $this->send_request('requestOrder',$domain_names);
   }
   
   public function getDnsChallenge (): array {
@@ -86,7 +110,7 @@ class AcmePHPWrapper {
   }
   public function challengeDNSAuthorization( array $challenge ): bool {
     $acme_php_challenge = AuthorizationChallenge::fromArray($challenge);
-    $ret = $this->acme_php->challengeAuthorization($acme_php_challenge);
+    $ret = $this->send_request('challengeAuthorization',$acme_php_challenge);
     return $ret['status'] == 'valid';
   }
   
@@ -94,7 +118,7 @@ class AcmePHPWrapper {
   public function finalizeOrderCertificate ( $domain_name, CSRSubject $dn,
                                              $domain_private_key ): void {
     $acme_csr = $this->createCSR($dn,$domain_private_key);
-    $this->certificateResponse = $this->acme_php->finalizeOrder($this->order,$acme_csr);
+    $this->certificateResponse = $this->send_request('finalizeOrder',$this->order,$acme_csr);
   }
   protected function createCSR(CSRSubject $dn, $domain_private_key): CertificateRequest {
     // AcmePHP はCSRに手間が多い。 openssl_csr_new がSAN 非対応のため。
