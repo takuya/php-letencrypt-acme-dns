@@ -9,7 +9,7 @@
          timeoutForSmallTests="12"
          stopOnFailure="true"
          stopOnError="true"
-         processIsolation="true"
+         processIsolation="false"
          displayDetailsOnIncompleteTests="true"
          displayDetailsOnTestsThatTriggerWarnings="true"
          displayDetailsOnTestsThatTriggerDeprecations="true"
