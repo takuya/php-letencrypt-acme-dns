@@ -15,9 +15,9 @@ if ( !function_exists( __NAMESPACE__.'\dns_resolve' ) ) {
    * @return string
    * @throws Net_DNS2_Exception
    */
-  function dns_resolve ( string $name, string $type ): string {
+  function  dns_resolve ( string $name, string $type, $ns_server=null ): string {
     $type = strtoupper( $type );
-    $ns_server = domain_ns( $name );
+    $ns_server = $ns_server ?? domain_ns( $name );
     $ns_server_ips = assert_ipv4_address( $ns_server ) ? [$ns_server]
       : array_map( fn( $e ) => $e['ip'], dns_get_record( $ns_server, DNS_A ) );
     
@@ -43,7 +43,7 @@ if ( !function_exists( __NAMESPACE__.'\dns_resolve' ) ) {
         return '';
       }
       if ( Net_DNS2_Lookups::E_NS_SOCKET_FAILED == $e->getCode() ) {
-        printf( 'Network Error. Check outbound udp/53 opened.' );
+        file_put_contents( 'php://stderr','Network Error. Check outbound udp/53 opened.' );
         throw $e;
       }
       throw $e;
