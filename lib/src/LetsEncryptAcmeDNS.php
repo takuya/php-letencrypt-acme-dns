@@ -33,7 +33,6 @@ class LetsEncryptAcmeDNS {
     protected Account $owner,
   ) {
     $this->setAcmeURL();
-    $this->acme_cli = $this->initAcmePHP( $this->acme_uri );
   }
   
   public function setDnsPlugin ( DnsPlugin $dns, string $target_domain_name = 'default' ) {
@@ -89,6 +88,7 @@ class LetsEncryptAcmeDNS {
                                  callable $on_dns_wait = null ): CertificateWithPrivateKey {
     //
     $this->isReady();
+    $this->acme_cli = $this->initAcmePHP( $this->acme_uri );
     return $this->newOrder(
       $domain_pkey_pem ? new AsymmetricKey( $domain_pkey_pem ) : new AsymmetricKey(),
       $on_dns_wait );
