@@ -26,10 +26,11 @@ In you php code.
 /** ********
  * Prepare
  */ 
-use Takuya\LEClientDNS01\Account;$cf_api_token = getenv( 'LE_CLOUDFLARE_TOKEN' );
+use Takuya\LEClientDNS01\Account;
+$cf_api_token = getenv( 'LE_CLOUDFLARE_TOKEN' );
 $your_email   = getenv( 'LE_EMAIL' );
 $domain_names = ["www.your-domain.tld",'*.www.your-domain.tld'];
-$account = new Account( $your_email);
+$account = new Account( $your_email );
 /** ********
  * Order certificate.
  */
