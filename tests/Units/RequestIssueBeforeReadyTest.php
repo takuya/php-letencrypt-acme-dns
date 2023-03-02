@@ -6,6 +6,7 @@ use Takuya\LEClientDNS01\LetsEncryptAcmeDNS;
 use Takuya\LEClientDNS01\PKey\AsymmetricKey;
 use Takuya\LEClientDNS01\Plugin\DNS\CloudflareDNSPlugin;
 use tests\Features\CertTestCase;
+use Takuya\LEClientDNS01\Account;
 
 class RequestIssueBeforeReadyTest extends CertTestCase {
   
@@ -13,7 +14,7 @@ class RequestIssueBeforeReadyTest extends CertTestCase {
     $ownerPkey = new AsymmetricKey();
     $dns = $this->createStub( CloudflareDNSPlugin::class );
     //
-    $cli = new LetsEncryptAcmeDNS( $ownerPkey->privKey(), $this->email );
+    $cli = new LetsEncryptAcmeDNS( Account::create($this->email) );
     $this->assertGotException( function() use ( $cli ) { $cli->isReady(); }, \LogicException::class );
     //
     $cli->setDomainNames( ['example.tld'] );

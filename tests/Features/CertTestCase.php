@@ -8,6 +8,7 @@ use Takuya\LEClientDNS01\LetsEncryptAcmeDNS;
 use Takuya\LEClientDNS01\Plugin\DNS\CloudflareDNSPlugin;
 use Takuya\LEClientDNS01\PKey\AsymmetricKey;
 use Takuya\RandomString\RandomString;
+use Takuya\LEClientDNS01\Account;
 
 class CertTestCase extends TestCase {
   use AssertCertificate;
@@ -20,7 +21,7 @@ class CertTestCase extends TestCase {
   protected string $email;
   
   protected function getInstanceLetsEncryptAcmeDNS (): LetsEncryptAcmeDNS {
-    return new LetsEncryptAcmeDNS( (new AsymmetricKey())->privKey(), $this->email );
+    return new LetsEncryptAcmeDNS( Account::create($this->email) );
   }
   
   protected function getInstanceCFDNSPlugin (): CloudflareDNSPlugin {

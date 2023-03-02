@@ -18,18 +18,25 @@ class LetsEncryptAcmeDNS {
   protected $logger;
   protected AcmePHPWrapper $acme_cli;
   /** @var DnsPlugin[] */
-  protected array $plugins=[];
+  protected array $plugins = [];
   protected string $acme_uri;
-  protected array  $domain_names;
+  protected array $domain_names;
+  
+  /**
+   * @return Account
+   */
+  public function getAccount (): Account {
+    return $this->owner;
+  }
   
   public function __construct (
-    public string    $owner_priv_key,
-    public string    $owner_email,
+    protected Account $owner,
   ) {
     $this->setAcmeURL();
     $this->acme_cli = $this->initAcmePHP( $this->acme_uri );
   }
-  public function setDnsPlugin( DnsPlugin $dns, string $target_domain_name='default' ){
+  
+  public function setDnsPlugin ( DnsPlugin $dns, string $target_domain_name = 'default' ) {
     $this->plugins[$target_domain_name] =$dns;
   }
   public function getDnsPlugin(string $target_domain_name='default'){
@@ -60,9 +67,14 @@ class LetsEncryptAcmeDNS {
   }
   
   protected function initAcmePHP ( $acme_uri ): AcmePHPWrapper {
-    $owner_pkey = new AsymmetricKey( $this->owner_priv_key );
-    $cli = new AcmePHPWrapper( $owner_pkey->privKey(), $acme_uri );
-    $cli->newAccount( $this->owner_email );
+    $private_key = $this->owner->private_key;
+    $cli = new AcmePHPWrapper( $private_key, $acme_uri );
+    // refresh account info
+    if (empty($this->owner->key['n'])){
+      $account_array = $cli->newAccount( $this->owner->contact[0] );
+      $account_array['private_key'] = $private_key;
+      $this->owner = new Account( ...$account_array );
+    }
     return $cli;
   }
   

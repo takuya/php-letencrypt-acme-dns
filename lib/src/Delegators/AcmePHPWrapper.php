@@ -28,10 +28,13 @@ class AcmePHPWrapper {
   protected \AcmePhp\Ssl\CertificateResponse $certificateResponse;
   protected \AcmePhp\Core\Protocol\CertificateOrder $challenges;
   protected \AcmePhp\Core\Protocol\CertificateOrder $order;
+  protected AcmeClient $acme_php_client;
   
   public function __construct ( $user_private_key, $directory_url = LetsEncryptACMEServer::STAGING ) {
     $this->owner_pkey = new AsymmetricKey( $user_private_key );
     $this->directory_url = $directory_url;
+    // cache AcmeClient becoase AcmeClient uses instance variable.
+    $this->acme_php_client = $this->initialize_acme_client( $this->directory_url );
   }
   
   protected function initialize_acme_client ( $directory_url  ): AcmeClient {
@@ -53,8 +56,7 @@ class AcmePHPWrapper {
     $error = null;
     foreach ( range( 0, $max_retry - 1 ) as $tried ) {
       try {
-        $acme_php_client = $this->initialize_acme_client( $this->directory_url );
-        return $acme_php_client->{$name}( ...$args );
+        return $this->acme_php_client->{$name}( ...$args );
       } catch (\AcmePhp\Core\Exception\AcmeCoreServerException $error) {
         if ( get_class($prev = $error->getPrevious()) !== \GuzzleHttp\Exception\ServerException::class){
           throw  $error;
@@ -62,6 +64,7 @@ class AcmePHPWrapper {
         $value = $prev->getResponse()->getHeader( 'retry-after' );
         $retry_after = !empty( $value ) ? $value[0] : 10;
         if ( $retry_after < 120 ) {// 120sec未満なら待つ。
+          //dump($retry_after);
           sleep( $retry_after );
         } else {
           throw $error;
