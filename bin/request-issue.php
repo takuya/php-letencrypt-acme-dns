@@ -7,6 +7,7 @@ use Takuya\LEClientDNS01\PKey\SSLCertificateInfo;
 use Takuya\LEClientDNS01\LetsEncryptACMEServer;
 use function Takuya\Utils\base_domain;
 use function Takuya\Utils\assert_str_is_domain;
+use Takuya\LEClientDNS01\Account;
 
 require_once __DIR__.DIRECTORY_SEPARATOR.'../vendor/autoload.php';
 
@@ -32,7 +33,6 @@ $cf_token = getenv( 'LE_CLOUDFLARE_TOKEN' );
 $email = getenv( 'LE_EMAIL' ) ?: '';
 $domain_names = filter_argv( $argv )['args'];
 $base_domain = getenv( 'LE_BASE_DOMAIN' ) ?: base_domain( $domain_names[0] );
-$ownerPkey = new AsymmetricKey();
 $logger = new class { public function debug ( $mess ): void { file_put_contents( "php://stderr", $mess ); } };
 $dns_plugin = new CloudflareDNSPlugin( $cf_token, $base_domain );
 $acme_server = LetsEncryptACMEServer::STAGING;
@@ -40,7 +40,7 @@ if ( in_array( '--prod', filter_argv( $argv )['opts'] ) ) {
   $acme_server = LetsEncryptACMEServer::PROD;
 }
 //
-$cli = new LetsEncryptAcmeDNS( $ownerPkey->privKey(), $email );
+$cli = new LetsEncryptAcmeDNS( Account::create($email) );
 $cli->setAcmeURL( LetsEncryptACMEServer::PROD );
 $cli->setLogger( $logger );
 $cli->setDomainNames( $domain_names );

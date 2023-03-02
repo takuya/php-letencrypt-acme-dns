@@ -12,6 +12,7 @@ class Account {
     public ?string $createdAt,
     public ?string $status,
     public ?string $private_key = null,
+    public ?string $account_url = null,
   ) {
   }
   
@@ -26,7 +27,8 @@ class Account {
       initialIp: null,
       createdAt: null,
       status: null,
-      private_key: ( new AsymmetricKey() )->privKey()
+      private_key: ( new AsymmetricKey() )->privKey(),
+      account_url: null
     );
   }
   

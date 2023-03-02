@@ -16,7 +16,6 @@ use AcmePhp\Ssl\DistinguishedName;
 use AcmePhp\Ssl\CertificateRequest;
 use Takuya\LEClientDNS01\PKey\AsymmetricKey;
 use AcmePhp\Core\Protocol\AuthorizationChallenge;
-use Takuya\LEClientDNS01\DNSChallengeTask;
 use Takuya\LEClientDNS01\PKey\CSRSubject;
 use Takuya\LEClientDNS01\LetsEncryptACMEServer;
 
@@ -75,7 +74,12 @@ class AcmePHPWrapper {
   }
   
   public function newAccount ( $email ): array {
-    return $this->send_request('registerAccount',$email);
+    $result = $this->send_request( 'registerAccount', $email );
+    $account_url = ( new \ReflectionClass( $this->acme_php_client ) )
+      ->getProperty( 'account' )
+      ->getValue( $this->acme_php_client );
+    $result['account_url'] = $account_url;
+    return $result;
   }
   
   public function newOrder ( array $domain_names ): void {

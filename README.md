@@ -19,29 +19,30 @@ php bin/request-issue.php 'aab.example.tld' 'aaa.example.tld'
 
 ### EXAMPLE
 In you php code.
+
 ```php
 <?php
 
 /** ********
  * Prepare
  */ 
-$cf_api_token = getenv( 'LE_CLOUDFLARE_TOKEN' );
+use Takuya\LEClientDNS01\Account;$cf_api_token = getenv( 'LE_CLOUDFLARE_TOKEN' );
 $your_email   = getenv( 'LE_EMAIL' );
 $domain_names = ["www.your-domain.tld",'*.www.your-domain.tld'];
-$owner_pkey   = new AsymmetricKey();// user's pkey, not a domain cert  pkey.
+$account = new Account( $your_email);
 /** ********
  * Order certificate.
  */
 $dns = new CloudflareDNSPlugin( $cf_api_token, base_domain($domain_names[0]) );
-$cli = new LetsEncryptAcmeDNS( $owner_pkey, $your_email );
+$cli = new LetsEncryptAcmeDNS( $account );
 $cli->setDomainNames( $domain_names );
 $cli->setAcmeURL( LetsEncryptACMEServer::PROD );
 $cli->setDnsPlugin( $dns );
 $cert_and_a_key = $cli->orderNewCert();
-
 /** ********
  * Save in your own way.
  */
+$owner_pkey = $account->private_key;
 $cert_pem  = $cert_and_a_key->cert();
 $cert_pkey = $cert_and_a_key->privKey();//domain pkey, not an owner's pkey. 
 $full_chain = $cert_and_a_key->fullChain();
