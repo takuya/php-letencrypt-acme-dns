@@ -6,11 +6,11 @@ use Takuya\LEClientDNS01\PKey\AsymmetricKey;
 
 class Account {
   public function __construct (
-    public ?array  $key,
-    public ?array  $contact,
-    public ?string $initialIp,
-    public ?string $createdAt,
-    public ?string $status,
+    public ?array  $key=[],
+    public ?array  $contact=[],
+    public ?string $initialIp='',
+    public ?string $createdAt='',
+    public ?string $status='',
     public ?string $private_key = null,
     public ?string $account_url = null,
   ) {
@@ -22,13 +22,8 @@ class Account {
   }
   public static function create ( $email = '' ) {
     return new static(
-      key: null,
       contact: [$email],
-      initialIp: null,
-      createdAt: null,
-      status: null,
       private_key: ( new AsymmetricKey() )->privKey(),
-      account_url: null
     );
   }
   

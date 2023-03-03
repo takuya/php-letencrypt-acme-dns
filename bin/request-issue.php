@@ -1,13 +1,12 @@
 <?php
 
+use Takuya\LEClientDNS01\Account;
 use Takuya\LEClientDNS01\Plugin\DNS\CloudflareDNSPlugin;
-use Takuya\LEClientDNS01\PKey\AsymmetricKey;
 use Takuya\LEClientDNS01\LetsEncryptAcmeDNS;
 use Takuya\LEClientDNS01\PKey\SSLCertificateInfo;
 use Takuya\LEClientDNS01\LetsEncryptACMEServer;
 use function Takuya\Utils\base_domain;
 use function Takuya\Utils\assert_str_is_domain;
-use Takuya\LEClientDNS01\Account;
 
 require_once __DIR__.DIRECTORY_SEPARATOR.'../vendor/autoload.php';
 
@@ -41,7 +40,7 @@ if ( in_array( '--prod', filter_argv( $argv )['opts'] ) ) {
 }
 //
 $cli = new LetsEncryptAcmeDNS( Account::create($email) );
-$cli->setAcmeURL( LetsEncryptACMEServer::PROD );
+$cli->setAcmeURL( $acme_server );
 $cli->setLogger( $logger );
 $cli->setDomainNames( $domain_names );
 $cli->setDnsPlugin( $dns_plugin );
