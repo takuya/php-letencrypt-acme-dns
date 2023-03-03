@@ -2,8 +2,8 @@ name: composer
 
 on:
   push:
-    branch:
-      - master
+    tag:
+      - v1.*
   schedule:
     - cron:  '0 11 */2 * *'
 jobs:
