@@ -4,6 +4,9 @@ on:
   push:
     branch:
       - master
+  paths:
+    - 'lib/**'
+    - 'tests/**'
   schedule:
     - cron:  '0 11 */2 * *'
 jobs:
