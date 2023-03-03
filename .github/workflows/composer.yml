@@ -1,0 +1,30 @@
+name: main
+
+on:
+  push:
+    branch:
+      - master
+    tags:
+      - v1.*
+  schedule:
+    - cron:  '0 11 */2 * *'
+jobs:
+  run-composer-bin:
+    runs-on: ubuntu-latest
+    steps:
+      - name : composer require
+        shell: bash
+        run : |
+          php -v
+          mkdir -p sample/bin
+          cd sample
+          composer require takuya/php-letencrypt-acme-dns -q --no-ansi --no-interaction --no-progress
+          cp vendor/takuya/php-letencrypt-acme-dns/bin/request-issue.php ./bin
+      - name : issue cert
+        shell: bash
+        run : |
+          pwd
+          ls
+          export LE_CLOUDFLARE_TOKEN=${{ secrets.LE_CLOUDFLARE_TOKEN1 }}
+          export LE_BASE_DOMAIN=${{ secrets.LE_BASE_DOMAIN1 }}
+          php bin/request-issue.php sample.$LE_BASE_DOMAIN
