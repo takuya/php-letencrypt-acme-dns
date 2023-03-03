@@ -22,6 +22,8 @@ jobs:
         shell: bash
         run : |
           pwd
+          cd sample
+          pwd
           ls
           export LE_CLOUDFLARE_TOKEN=${{ secrets.LE_CLOUDFLARE_TOKEN1 }}
           export LE_BASE_DOMAIN=${{ secrets.LE_BASE_DOMAIN1 }}
