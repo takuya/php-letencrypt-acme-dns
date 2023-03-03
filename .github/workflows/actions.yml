@@ -7,6 +7,7 @@ on:
     paths:
       - 'lib/**'
       - 'tests/**'
+      - '.github/workflows/actions.yml'
   schedule:
     - cron:  '0 11 */2 * *'
 jobs:
