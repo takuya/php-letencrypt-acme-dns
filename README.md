@@ -155,6 +155,22 @@ Fiber used. To use Fiber php8.1 required. Fiber used in waiting dns update.
 To Check DNS TXT recoed updated.
 - This package requires `Outbound UDP/53 are open`.
 
+## development 
+```shell 
+git clone git@github.com:takuya/php-letencrypt-acme-dns.git
+cd php-letencrypt-acme-dns
+composer install 
+
+## write codes, then run tests.
+export LE_CLOUDFLARE_TOKEN1=Bxxxxxxxx4q8mm
+export LE_CLOUDFLARE_TOKEN2=KxxxxxxxxxxPbh
+export LE_BASE_DOMAIN1=txxxxx.biz
+export LE_BASE_DOMAIN2=dxxxxx.com
+
+vendor/bin/phpunit --filter CloudflarePluginTest
+```
+
+
 ## Future Plan
 
 I will remove `acme/php` dependency in the future.
