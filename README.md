@@ -162,11 +162,13 @@ cd php-letencrypt-acme-dns
 composer install 
 
 ## write codes, then run tests.
+echo "
 export LE_CLOUDFLARE_TOKEN1=Bxxxxxxxx4q8mm
 export LE_CLOUDFLARE_TOKEN2=KxxxxxxxxxxPbh
 export LE_BASE_DOMAIN1=txxxxx.biz
 export LE_BASE_DOMAIN2=dxxxxx.com
-
+" > ./env
+source ./env
 vendor/bin/phpunit --filter CloudflarePluginTest
 ```
 
