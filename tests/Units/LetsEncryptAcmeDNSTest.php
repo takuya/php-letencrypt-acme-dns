@@ -8,7 +8,7 @@ use Takuya\LEClientDNS01\Plugin\DNS\CloudflareDNSPlugin;
 
 class LetsEncryptAcmeDNSTest extends TestCase {
   public function test_validate_domain () {
-    $obj = $this->getMockObject( LetsEncryptAcmeDNS::class );
+    $obj = $this->createStub( LetsEncryptAcmeDNS::class );
     $method = $this->getMethod( LetsEncryptAcmeDNS::class, 'validateDomainName' );
     //
     $names = ['example.com'];
@@ -29,10 +29,10 @@ class LetsEncryptAcmeDNSTest extends TestCase {
   }
   
   public function test_add_get_dns_plugin () {
-    $obj = $this->getMockObject( LetsEncryptAcmeDNS::class );
+    $obj = $this->createStub( LetsEncryptAcmeDNS::class );
     $add_method = $this->getMethod( LetsEncryptAcmeDNS::class, 'setDnsPlugin' );
     $get_method = $this->getMethod( LetsEncryptAcmeDNS::class, 'getDnsPlugin' );
-    $dns = $this->getMockObject( CloudflareDNSPlugin::class );
+    $dns = $this->createStub( CloudflareDNSPlugin::class );
     ////
     $add_method->invokeArgs( $obj, [$dns] );
     $ret = $get_method->invokeArgs( $obj, [] );
@@ -48,17 +48,17 @@ class LetsEncryptAcmeDNSTest extends TestCase {
   }
   
   public function test_add_get_dns_plugin_with_domain_name () {
-    $obj = $this->getMockObject( LetsEncryptAcmeDNS::class );
+    $obj = $this->createStub( LetsEncryptAcmeDNS::class );
     $add_method = $this->getMethod( LetsEncryptAcmeDNS::class, 'setDnsPlugin' );
     $get_method = $this->getMethod( LetsEncryptAcmeDNS::class, 'getDnsPlugin' );
-    $dns = $this->getMockObject( CloudflareDNSPlugin::class );
+    $dns = $this->createStub( CloudflareDNSPlugin::class );
     //
     //
     $add_method->invokeArgs( $obj, [$dns, 'example.com'] );
     $ret = $get_method->invokeArgs( $obj, ['example.com'] );
     $this->assertSame( $ret, $dns );
     //
-    $default_dns = $this->getMockObject( CloudflareDNSPlugin::class );
+    $default_dns = $this->createStub( CloudflareDNSPlugin::class );
     $add_method->invokeArgs( $obj, [$default_dns] );
     $ret = $get_method->invokeArgs( $obj, ['example.com'] );
     $this->assertSame( $ret, $dns );

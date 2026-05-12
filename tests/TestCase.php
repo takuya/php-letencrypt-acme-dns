@@ -13,11 +13,5 @@ class TestCase extends BaseTestCase {
     return $method;
   }
   
-  protected function getMockObject ( $class ) {
-    return $this->getMockBuilder( $class )
-                ->disableOriginalConstructor()
-                ->getMock();
-  }
-  
   
 }
