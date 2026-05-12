@@ -9,6 +9,7 @@ class WildcardCertificateTest extends CertTestCase {
   public function test_issue_wildcard_domain_certificate () {
     // variables
     $str = RandomString::gen( 5, RandomString::LOWER );
+    $str = 'phpunit-'.$str;
     $domain_names = [
       "*.{$str}.{$this->base_domain}",
     ];

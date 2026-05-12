@@ -9,6 +9,7 @@ class MultipleDomainSubjectAltNamesCertTest extends CertTestCase {
   public function test_issue_multiple_domain_certificate () {
     // variables
     $str = RandomString::gen( 5, RandomString::LOWER );
+    $str = 'phpunit-'.$str;
     $domain_names = [
       "{$str}.{$this->base_domain}",
       "a.www.{$str}.{$this->base_domain}",

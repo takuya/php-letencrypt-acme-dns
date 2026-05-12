@@ -11,6 +11,7 @@ class TwoPluginDNSCertificateTest extends CertTestCase {
     
     // variables
     $str = RandomString::gen( 5, RandomString::LOWER );
+    $str = 'phpunit-'.$str;
     $domain_names = [
       "*.{$str}.{$this->base_domain1}",
       "*.{$str}.{$this->base_domain2}",
