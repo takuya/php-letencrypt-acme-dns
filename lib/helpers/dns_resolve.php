@@ -31,7 +31,7 @@ if ( !function_exists( __NAMESPACE__.'\dns_resolve' ) ) {
                               array_filter($result->answer,
                                 fn($e)=> $name==$e->name && get_class($e)=="Net_DNS2_RR_TXT" )),
         "MX" => ( function( $answer ) {
-          usort( $answer, function( $a, $b ) { return $a->preference > $b->preference; } );
+          usort( $answer, function( $a, $b ) { return $a->preference <=> $b->preference; } );
           return array_reduce( $answer, function( $mx, $e ) {
             $mx[$e->preference] = $e->exchange;
             return $mx;
