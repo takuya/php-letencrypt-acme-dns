@@ -11,7 +11,7 @@ class IssueSingleDomainCertificateTest extends CertTestCase {
     // variables
     $str = RandomString::gen( 5, RandomString::LOWER );
     $domain_names = [
-      "{$str}.{$this->base_domain}",
+      "phpunit-{$str}.{$this->base_domain}",
     ];
     // prepare
     $dns = $this->getInstanceCFDNSPlugin();
