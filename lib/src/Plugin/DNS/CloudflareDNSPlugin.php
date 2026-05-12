@@ -12,6 +12,13 @@ class CloudflareDNSPlugin extends DNSPlugin {
   public function __construct ( $api_token, $zone_name ) {
     $this->cloudflareWrapper = new CloudflareDNSRecord( $api_token, $zone_name );
   }
+  public function isExists($domain,$txt_content=null):bool {
+    if (!str_contains($domain,$this->cloudflareWrapper->zone_name)){
+      $domain = preg_replace("/\.$/",'',$domain);
+      $domain = "{$domain}.{$this->cloudflareWrapper->zone_name}";
+    }
+    return $this->cloudflareWrapper->isExists($domain, 'TXT',$txt_content);
+  }
   
   public function addDnsTxtRecord ( $domain, $content ): bool {
     $param = [

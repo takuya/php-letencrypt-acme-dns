@@ -7,16 +7,22 @@ use function Takuya\Utils\base_domain;
 class CloudflareDNSRecord {
   protected string $zone_id;
   protected \Cloudflare\API\Endpoints\DNS $cli;
+  public string $zone_name;
   
   public function __construct ( $api_token, $name ) {
-    $zone_name = base_domain( $name );
+    $this->zone_name = base_domain( $name );
+    [$zone_id,$dns] = self::cf_factory($api_token,$this->zone_name);;
+    $this->zone_id = $zone_id;
+    $this->cli=$dns;
+  }
+  protected static function cf_factory($api_token,$zone_domain) {
     $token = new \Cloudflare\API\Auth\APIToken( $api_token );
     $adapter = new \Cloudflare\API\Adapter\Guzzle( $token );
     $zone = new \Cloudflare\API\Endpoints\Zones( $adapter );
-    $zone_id = $zone->getZoneID( $zone_name );
+    $zone_id = $zone->getZoneID( $zone_domain );
     $dns = new \Cloudflare\API\Endpoints\DNS( $adapter );
-    $this->zone_id = $zone_id;
-    $this->cli = $dns;
+    
+    return [$zone_id,$dns];
   }
   
   public function isExists ( $name, $type,$content=null ): bool {
