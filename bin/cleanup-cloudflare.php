@@ -35,7 +35,7 @@ function remove_junk( $api_token, $zone_domain ) {
     }
   }
   foreach ( $junk_items as $item ) {
-    echo "{$junk_items->name}";
+    echo "{$item->name}: ";
     $cf_cli->deleteRecord( $zone_id, $item->id );
     echo "deleted".PHP_EOL;
   }
