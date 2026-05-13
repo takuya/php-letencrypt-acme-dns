@@ -25,7 +25,7 @@ class AsymmetricKey {
   }
   
   public function pubKey () {
-    return openssl_pkey_get_details( openssl_pkey_get_private( $this->pkey_private ) )['key'];
+    return $this->pkey_detail()['key'];
   }
   
   public static function CertificateSigningRequest ( array $dn, \OpenSSLAsymmetricKey $private_key,
@@ -37,6 +37,12 @@ class AsymmetricKey {
   public function privKey (): string {
     openssl_pkey_export( $this->pkey_private, $pem );
     return $pem;
+  }
+  protected function OpenSSLAsymmetricKey():\OpenSSLAsymmetricKey {
+    return openssl_pkey_get_private($this->pkey_private);
+  }
+  protected function pkey_detail() :array {
+    return openssl_pkey_get_details($this->OpenSSLAsymmetricKey());
   }
   
 }
