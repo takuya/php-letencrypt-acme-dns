@@ -29,7 +29,7 @@ if ( !function_exists( __NAMESPACE__.'\dns_resolve' ) ) {
         "SOA" => array_map( fn( $e ) => $e->mname, $result->answer ),
         "TXT" => array_map( fn( $e ) => join(PHP_EOL, $e?->text ),
                               array_filter($result->answer,
-                                fn($e)=> $name==$e->name && get_class($e)=="Net_DNS2_RR_TXT" )),
+                                fn($e)=> strcasecmp($name,$e->name)===0 && get_class($e)=="Net_DNS2_RR_TXT" )),
         "MX" => ( function( $answer ) {
           usort( $answer, function( $a, $b ) { return $a->preference <=> $b->preference; } );
           return array_reduce( $answer, function( $mx, $e ) {

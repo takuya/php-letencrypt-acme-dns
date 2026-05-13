@@ -42,8 +42,14 @@ class DNSResolveTest extends TestCase {
     $this->assertNotEmpty($ret);
     $this->assertStringContainsString('v=spf1',$ret);
     $this->assertStringContainsString('smime',$ret);
-    
   }
+  public function test_resolve_dns_case_insensitive_TXT(){
+    $ret = dns_resolve('gMaiL.com', 'txt');
+    $this->assertNotEmpty($ret);
+    $this->assertStringContainsString('v=spf1',$ret);
+    $this->assertStringContainsString('smime',$ret);
+  }
+  
   public function test_resolve_dns_A(){
     $ret = dns_resolve('gmail.com', 'a');
     $this->assertNotEmpty($ret);
