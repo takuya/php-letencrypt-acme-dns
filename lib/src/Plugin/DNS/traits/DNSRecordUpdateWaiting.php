@@ -14,9 +14,11 @@ trait DNSRecordUpdateWaiting {
   public bool $enable_dns_check_at_waiting_for_update = true;
   
   public function waitForUpdated ( $name, $type, $content, callable $on_wait = null ): void {
-    $type = strtoupper( $type );
+    if (!$this->assertRecord($name,$type,$content)){
+        throw new \RuntimeException('DNS RECORD has not found in Cloudflare API.');
+    };
     if ( $this->isDNSCheckEnabled() ) {
-      $this->waitUpdatedWithCheckingDNSQuery( $name, $type, $content, $on_wait ?? function() { } );
+      $this->waitUpdatedWithCheckingDNSQuery( $name, strtoupper( $type ), $content, $on_wait ?? function() { } );
     } else {
       // wait 10 seconds will be enough for Cloudflare SOA primary NS and LE ACME Resolver.
       sleep( 10 );
