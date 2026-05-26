@@ -6,7 +6,7 @@ use Takuya\LEClientDNS01\Acme\Base64URLEncode;
 use Takuya\LEClientDNS01\Acme\AcmeAccount;
 
 abstract  class AcmeRequest {
-  protected AcmeNonce $nonce; // TODO::クラスにする
+  protected AcmeNonce $nonce;
   protected ?AcmeAccount $account = null;
   protected string $method = 'POST';
   

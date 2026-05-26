@@ -23,13 +23,13 @@ class AcmeAccount {
       $this->private_key = (new AsymmetricKey())->privKey();
     }
   }
-  public function private_key_pem() {
+  public function private_key_pem(): string {
     return $this->private_key;
   }
-  public function email() {
+  public function email():string {
     return $this->email;
   }
-  public function updateAccountUrl(ResponseInterface $response) {
+  public function updateAccountUrl(ResponseInterface $response):string {
     $kid = $response->getHeaderLine('Location');
     $this->account_url = $kid;
     return $kid;
@@ -39,7 +39,6 @@ class AcmeAccount {
   }
   public function kid():string {
     return $this->getAccountUrl();
-    
   }
   
 }

@@ -65,16 +65,8 @@ dump($nonce);
 $account =new AcmeAccount("admin@{$sub_domain}",$key->privKey());
 $ret = $cli->newAccount($account,$nonce);
 
-['order'=>$order,'nonce'=>$nonce,'order_url'=>$order_url] = $cli->newOrder($account,[$sub_domain]);
-$new_order = new AcmeOrder(
-  $order->status,
-  $order->expires,
-  $order->identifiers,
-  $order->authorizations,
-  $order->finalize,
-);
-$new_order->setOrderUrl($order_url);
-$authorization =$new_order->authorization($sub_domain);
+$new_order = $cli->newOrder($account,[$sub_domain]);
+$authorization =$new_order->getAuthorization($sub_domain);
 $challenge = $authorization->getChallenge();
 //dump($challenge);
 ////// [ACME Step 6] DNSレコード設置: TXTレコードを設定し反映を待機

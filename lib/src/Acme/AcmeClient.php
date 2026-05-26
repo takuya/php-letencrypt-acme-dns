@@ -2,166 +2,67 @@
 
 namespace Takuya\LEClientDNS01\Acme;
 
-use Takuya\LEClientDNS01\Acme\Resources\Directory\AcmeEndpointEnum;
 use Takuya\LEClientDNS01\Acme\Requests\AcmeNonce;
-use Psr\Http\Message\ResponseInterface;
-use Takuya\LEClientDNS01\Acme\Requests\StartNewOrderDirectoryRequest;
 use Takuya\LEClientDNS01\Acme\Resources\AcmeDirectory;
-use Takuya\LEClientDNS01\Acme\Resources\AcmeAuthorizationChallenge;
 use Takuya\LEClientDNS01\Acme\Resources\AcmeOrder;
+use Takuya\LEClientDNS01\Acme\Http\AcmeDirectoryClient;
+use Takuya\LEClientDNS01\Acme\Http\AcmeOrderClient;
+use Takuya\LEClientDNS01\Acme\Resources\AcmeChallengeType;
 
 /**
  * 全体の流れをここで管理する。
  */
 class AcmeClient {
   protected AcmeNonce $nonce;
+  protected AcmeDirectoryClient $dir_cli;
   
-  public function __construct( protected AcmeDirectory $dir ) { }
-  
-  public function newNonce(): AcmeNonce {
-    $req = $this->dir->getResource( AcmeEndpointEnum::newNonce )->createRequest();
-    $this->nonce = $req->getNonce();
-    $cli = new AcmeHTTPClient();
-    $res = $cli->send( $req );
-    static::updateNonce( $this->nonce, $res );
+  public function __construct( protected AcmeDirectory $acmeDirectory ) {
+    $this->dir_cli = new AcmeDirectoryClient( $this->acmeDirectory );
+  }
+  public function getNonce():AcmeNonce {
     return $this->nonce;
   }
   
-  public static function updateNonce( AcmeNonce $nonce, ResponseInterface $res ): string {
-    $nonce->updateNonce( $res );
-    return $nonce->content();
+  public function newNonce(): AcmeNonce {
+    return $this->nonce = $this->dir_cli->newNonce();
   }
   
-  public static function updateAccount( AcmeAccount $account, ResponseInterface $res ): string {
-    return $account->updateAccountUrl( $res );
+  public function newAccount( AcmeAccount $account ): array {
+    return $this->dir_cli->newAccount( $account, $this->nonce );
   }
   
-  public static function updateOrder( AcmeOrder $order, ResponseInterface $res ): string {
-    return $order->updateLocation( $res );
+  public function newOrder( AcmeAccount $account, array $domains ): AcmeOrder {
+    ['new_order' => $body,
+     'order_url' => $order_url,
+    ] = $this->dir_cli->newOrder( $account, $domains, $this->nonce );
+    $new_order = new AcmeOrder(
+      $body->status,
+      $body->expires,
+      $body->identifiers,
+      $body->authorizations,
+      $body->finalize,
+    );
+    $new_order->setOrderUrl( $order_url );
+    $new_order->setAccount($account);
+    return $new_order;
   }
   
-  public function newAccount( AcmeAccount $account, ?string $nonce = null ): array {
-    $this->nonce = $nonce ? new AcmeNonce( $nonce ) : $this->nonce;
-    $cli = new AcmeHTTPClient();
-    $req = $this->dir->getResource( AcmeEndpointEnum::newAccount )->createRequest( $this->nonce, $account );
-    $res = $cli->send( $req );
-    $nonce = static::updateNonce( $this->nonce, $res );
-    $kid = static::updateAccount( $account, $res );
-    return ['new_nonce' => $nonce, 'account_url' => $kid,];
+  public function challengeAuthorization(AcmeOrder $order, string $domain, AcmeChallengeType $type=AcmeChallengeType::DNS01 ): void {
+    $cli = new AcmeOrderClient($order, $this->nonce);
+    $cli->challengeAuthorization($domain, $type);
+    $cli->waitForAuthorization($domain,$type);
   }
   
-  public function newOrder( AcmeAccount $account, array $domains, ?string $nonce = null ) {
-    $this->nonce = $nonce ? new AcmeNonce( $nonce ) : $this->nonce;
-    $cli = new AcmeHTTPClient();
-    /** @var StartNewOrderDirectoryRequest $req */
-    $req = $this->dir->getResource( AcmeEndpointEnum::newOrder )->createRequest( $this->nonce, $account );
-    foreach ( $domains as $domain ) {
-      $req->addCertificateRequestDomain( $domain );
+  public function finalize( AcmeOrder $order, string $csr_pem ): AcmeOrder {
+    $cli = new AcmeOrderClient($order,$this->nonce);
+    $cli->finalizeOrder($csr_pem);
+    return $order;
+  }
+  
+  public function getCertificate(AcmeOrder $order): string {
+    if (empty($certificate_url = $order->getCertificateUrl())){
+      throw new \RuntimeException('order is not finalized.');
     }
-    //
-    $res = $cli->send( $req );
-    $nonce = static::updateNonce( $this->nonce, $res );
-    $body = json_decode( $res->getBody()->getContents() );
-    return ['order' => $body, 'nonce' => $nonce, 'order_url' => $res->getHeaderLine( 'Location' )];
-  }
-  
-  public function challengeAuthorization( AcmeAuthorizationChallenge $challenge, AcmeAccount $account,
-                                          ?string                    $nonce ) {
-    $this->nonce = $nonce ? new AcmeNonce( $nonce ) : $this->nonce;
-    $req = $challenge->createRequest( $this->nonce, $account );
-    $cli = new AcmeHTTPClient();
-    $res = $cli->send( $req );
-    static::updateNonce( $this->nonce, $res );
-    $obj = json_decode( $res->getBody()->getContents() );
-    return ['response' => $obj, 'nonce' => $this->nonce->content()];
-  }
-  
-  protected function checkChallengeAuthorizationResult( AcmeAuthorizationChallenge $challenge ) {
-    $req = $challenge->createRequestForCheckPendingResult();
-    $cli = new AcmeHTTPClient();
-    $res = $cli->send( $req );
-    $obj = json_decode( $res->getBody()->getContents() );
-    return $obj;
-  }
-  
-  public function waitForAuthorization( AcmeAuthorizationChallenge $challenge, ?callable $call_on_wait = null ) {
-    $max_wait_sec = 30;
-    $until = time() + $max_wait_sec;
-    do {
-      // Order の最新状態を取得
-      $orderData = $this->checkChallengeAuthorizationResult( $challenge );
-      $status = $orderData->status;
-      //dump($orderData);
-      
-      if( $status === 'processing' ) {
-        //dump("ステータス: processing... 発行を待っています。");
-        sleep( 1 );
-        $call_on_wait && call_user_func( $call_on_wait( $orderData ) );
-      }
-      if( $status === 'valid' ) {
-        //dump("証明書が発行されました！");
-        break;
-      }
-      if( time() > $until ) {
-        //dump("タイムアップ・中断");
-        break;
-      }
-    } while ( $status === 'processing' || $status === 'pending' );
-    
-    
-    return $orderData->status == 'valid';
-    //dump($certificateUrl);
-    //return $certificateUrl;
-    
-  }
-  
-  public function checkFinalizeResultStatus( AcmeOrder $order ) {
-    $req = $order->createFinalizeStatusCheckRequest();
-    $cli = new AcmeHTTPClient();
-    $res = $cli->send( $req );
-    $obj = json_decode( $res->getBody()->getContents() );
-    $order->updateStatus( $obj->status );
-    if ( property_exists($obj,'certificate')){
-      $order->updateOrderProperty( 'certificate', $obj->certificate );
-    }
-    return $obj;
-  }
-  
-  public function finalize( AcmeAccount $account, AcmeOrder $order, string $csr_pem, ?string $nonce ) {
-    $this->nonce = $nonce ? new AcmeNonce( $nonce ) : $this->nonce;
-    $req = $order->createFinalizeRequest( $account, $this->nonce, $csr_pem );
-    $cli = new AcmeHTTPClient();
-    $res = $cli->send( $req );
-    $obj = json_decode( $res->getBody()->getContents() );
-    return $obj;
-  }
-  
-  public function waitForFinalize( AcmeOrder $order, callable $call_on_wait = null ): bool {
-    $max_wait_sec = 30;
-    $until = time() + $max_wait_sec;
-    do {
-      // Order の最新状態を取得
-      $orderData = $this->checkFinalizeResultStatus( $order );
-      $status = $orderData->status;
-      //dump($orderData);
-      
-      if( $status === 'processing' ) {
-        //dump("ステータス: processing... 発行を待っています。");
-        sleep( 1 );
-        $call_on_wait && call_user_func( $call_on_wait( $orderData ) );
-      }
-      if( $status === 'valid' ) {
-        //dump("証明書が発行されました！");
-        break;
-      }
-      if( time() > $until ) {
-        //dump("タイムアップ・中断");
-        break;
-      }
-    } while ( $status === 'processing' || $status === 'pending' );
-    
-    dump( $order );
-    
-    return $orderData->status == 'valid';
+    return file_get_contents($certificate_url);
   }
 }

@@ -10,7 +10,7 @@ enum AcmeEndpointEnum :string {
   case newAccount = AcmeEndpointNewAccount::class;
   case newNonce = AcmeEndpointNewNonce::class;
   case newOrder = AcmeEndpointNewOrder::class;
-  case revokeCert = AcmeResouceRevokeCert::class;
+  case revokeCert = AcmeEndpointRevokeCert::class;
   
   public function getRequestObjectClass(): string {
     return match($this){

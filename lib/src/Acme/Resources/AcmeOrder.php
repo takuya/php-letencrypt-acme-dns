@@ -11,6 +11,7 @@ use Takuya\LEClientDNS01\Acme\Requests\FinalizeOrderStatusRequest;
 class AcmeOrder {
   protected string $url;
   protected string $certificate;
+  protected AcmeAccount $account;
   
   public function __construct(
     protected string $status,
@@ -31,6 +32,12 @@ class AcmeOrder {
   
   public function setOrderUrl( string $url ): void {
     $this->url = $url;
+  }
+  public function setAccount(AcmeAccount $account): void {
+    $this->account = $account;
+  }
+  public function getAccount():AcmeAccount {
+    return $this->account;
   }
   
   public function getOrderUrl(): string {
@@ -74,7 +81,7 @@ class AcmeOrder {
     return $this->finalize;
   }
   
-  public function authorization( $identifier_value ): AcmeAuthorization {
+  public function getAuthorization( $identifier_value ): AcmeAuthorization {
     $idx = -1;
     foreach ( $this->identifiers as $key => $identifier ) {
       if( strcasecmp( $identifier_value, $identifier->value ) === 0 ) {

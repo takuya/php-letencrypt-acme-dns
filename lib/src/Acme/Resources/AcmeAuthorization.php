@@ -16,9 +16,14 @@ class AcmeAuthorization {
     $this->authorization = $this->authorization ?? json_decode( file_get_contents( $this->url ) );
     return $this->authorization->challenges;
   }
-  public function getChallenge( $type='dns-01'):?object {
+  
+  /**
+   * @param AcmeChallengeType $type http-01,dns-01,tls-alpn-01
+   * @return object|AcmeAuthorizationChallenge|null
+   */
+  public function getChallenge(AcmeChallengeType $type ):?object {
     foreach ( $this->challenges() as $challenge ) {
-      if ( strcasecmp($challenge->type, $type) ===0 ) {
+      if ( strcasecmp($challenge->type, $type->value) ===0 ) {
         return new AcmeAuthorizationChallenge($challenge);
       }
     }
