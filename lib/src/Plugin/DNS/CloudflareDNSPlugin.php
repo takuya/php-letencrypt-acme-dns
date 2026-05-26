@@ -28,7 +28,7 @@ class CloudflareDNSPlugin extends DNSPlugin {
       'proxied' => false,
     ];
     $this->cloudflareWrapper->addRecord( ...$param );
-    return true;
+    return $this->isExists($domain,$content);
   }
   
   public function removeTxtRecord ( $domain, $content = null ): bool {
@@ -44,6 +44,6 @@ class CloudflareDNSPlugin extends DNSPlugin {
       $txt_record = ['name' => $domain, 'type' => 'TXT', 'content' => $content];
       $this->cloudflareWrapper->deleteRecord( $this->cloudflareWrapper->getRecordId( ...$txt_record ) );
     }
-    return true;
+    return !$this->isExists($domain,$content);
   }
 }

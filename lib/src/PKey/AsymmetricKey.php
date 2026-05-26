@@ -34,9 +34,11 @@ class AsymmetricKey {
     return openssl_csr_new( $dn, $private_key, $options, $extra );
   }
   
-  public function privKey (): string {
-    openssl_pkey_export( $this->pkey_private, $pem );
-    return $pem;
+  public function privKey (string $type='string'): string|\OpenSSLAsymmetricKey {
+    return match ($type){
+      \OpenSSLAsymmetricKey::class=>$this->OpenSSLAsymmetricKey(),
+      'pem', 'string' =>$this->pkey_private,
+    };
   }
   protected function OpenSSLAsymmetricKey():\OpenSSLAsymmetricKey {
     return openssl_pkey_get_private($this->pkey_private);
