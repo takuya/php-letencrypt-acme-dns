@@ -7,7 +7,7 @@ use Takuya\LEClientDNS01\Acme\Resources\AcmeDirectory;
 use Takuya\LEClientDNS01\Acme\Resources\AcmeOrder;
 use Takuya\LEClientDNS01\Acme\Http\AcmeDirectoryClient;
 use Takuya\LEClientDNS01\Acme\Http\AcmeOrderClient;
-use Takuya\LEClientDNS01\Acme\Resources\AcmeChallengeType;
+use Takuya\LEClientDNS01\Acme\Resources\AcmeChallengeTypeEnum;
 
 /**
  * 全体の流れをここで管理する。
@@ -47,7 +47,7 @@ class AcmeClient {
     return $new_order;
   }
   
-  public function challengeAuthorization(AcmeOrder $order, string $domain, AcmeChallengeType $type=AcmeChallengeType::DNS01 ): void {
+  public function challengeAuthorization( AcmeOrder $order, string $domain, AcmeChallengeTypeEnum $type=AcmeChallengeTypeEnum::DNS01 ): void {
     $cli = new AcmeOrderClient($order, $this->nonce);
     $cli->challengeAuthorization($domain, $type);
     $cli->waitForAuthorization($domain,$type);

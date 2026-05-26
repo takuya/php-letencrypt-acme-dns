@@ -4,7 +4,7 @@ namespace Takuya\LEClientDNS01\Acme\Http;
 
 use Takuya\LEClientDNS01\Acme\Resources\AcmeOrder;
 use Takuya\LEClientDNS01\Acme\Resources\AcmeAuthorizationChallenge;
-use Takuya\LEClientDNS01\Acme\Resources\AcmeChallengeType;
+use Takuya\LEClientDNS01\Acme\Resources\AcmeChallengeTypeEnum;
 
 class AcmeOrderClient {
   public function __construct(
@@ -12,7 +12,7 @@ class AcmeOrderClient {
     protected AcmeNonce $nonce ) {
   }
   
-  public function challengeAuthorization( string $domain, AcmeChallengeType $type ): object {
+  public function challengeAuthorization( string $domain, AcmeChallengeTypeEnum $type ): object {
     $req = $this->getChallenge( $domain, $type )->createRequest( $this->nonce, $this->order->getAccount() );
     $res = AcmeHttpClient::send( $req );
     $this->nonce->updateNonce( $res );
@@ -20,7 +20,7 @@ class AcmeOrderClient {
     return $obj;
   }
   
-  protected function getChallenge( string $domain, AcmeChallengeType $type ): AcmeAuthorizationChallenge {
+  protected function getChallenge( string $domain, AcmeChallengeTypeEnum $type ): AcmeAuthorizationChallenge {
     return $this->order
       ->getAuthorization( $domain )
       ->getChallenge( $type );
@@ -45,7 +45,7 @@ class AcmeOrderClient {
     return $status;
   }
   
-  public function waitForAuthorization( string $domain, AcmeChallengeType $type, ?callable $call_on_wait = null,
+  public function waitForAuthorization( string $domain, AcmeChallengeTypeEnum $type, ?callable $call_on_wait = null,
                                         int    $max_wait_sec = 15 ) {
     $challenge = $this->getChallenge( $domain, $type );
     $valid_str = 'valid';

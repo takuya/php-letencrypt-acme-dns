@@ -19,10 +19,10 @@ class AcmeAuthorization {
   }
   
   /**
-   * @param AcmeChallengeType $type http-01,dns-01,tls-alpn-01
+   * @param AcmeChallengeTypeEnum $type http-01,dns-01,tls-alpn-01
    * @return object|null
    */
-  public function getChallenge( AcmeChallengeType $type ): object {
+  public function getChallenge( AcmeChallengeTypeEnum $type ): object {
     $found = null;
     foreach ( $this->challenges() as $challenge ) {
       if( strcasecmp( $challenge->type, $type->value ) === 0 ) {

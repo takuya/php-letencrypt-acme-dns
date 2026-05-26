@@ -5,7 +5,6 @@ namespace Takuya\LEClientDNS01\Acme\Http;
 use Takuya\LEClientDNS01\Acme\Resources\AcmeDirectory;
 use Psr\Http\Message\ResponseInterface;
 use Takuya\LEClientDNS01\Acme\AcmeAccount;
-use Takuya\LEClientDNS01\Acme\Requests\StartNewOrderDirectoryRequest;
 
 class AcmeDirectoryClient {
   

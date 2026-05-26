@@ -65,7 +65,7 @@ class AcmeOrder {
     return json_encode( $this->toArray() );
   }
   
-  public function toArray() {
+  public function toArray(): array {
     return [
       'status'         => $this->status,
       'expires'        => $this->expires,
