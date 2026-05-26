@@ -20,8 +20,8 @@ class JWT {
     ];
     return $jwt;
   }
-  public function toJson() {
-    return json_encode($this->convert());
+  public static function toJson(string $private_key_pem):string {
+    return json_encode(self::toArray($private_key_pem));
   }
   public static  function toArray(string|\OpenSSLAsymmetricKey  $private_key_pem):array {
     $obj = new static($private_key_pem);

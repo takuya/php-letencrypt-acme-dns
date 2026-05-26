@@ -4,7 +4,7 @@ namespace Takuya\LEClientDNS01\Acme\Requests;
 
 use Takuya\LEClientDNS01\Acme\Resources\AcmeOrder;
 
-class FinalizeOrderStatusRequest extends AcmeRequest {
+class FinalizeOrderStatusRequest extends AcmeOrderRequest {
   
   public string $method = 'GET';
   

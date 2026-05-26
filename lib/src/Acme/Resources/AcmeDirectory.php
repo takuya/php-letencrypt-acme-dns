@@ -2,10 +2,11 @@
 
 namespace Takuya\LEClientDNS01\Acme\Resources;
 
-use Takuya\LEClientDNS01\Acme\Resources\Directory\AcmeEndpointEnum;
-use Takuya\LEClientDNS01\Acme\Resources\Directory\AcmeEndpointNewNonce;
-use Takuya\LEClientDNS01\Acme\Resources\Directory\AcmeEndpointNewAccount;
-use Takuya\LEClientDNS01\Acme\Resources\Directory\AcmeEndpointNewOrder;
+use Takuya\LEClientDNS01\Acme\Requests\RequestNewNonceDirectoryRequest;
+use Takuya\LEClientDNS01\Acme\Http\AcmeNonce;
+use Takuya\LEClientDNS01\Acme\AcmeAccount;
+use Takuya\LEClientDNS01\Acme\Requests\RegisterNewAccountDirectoryRequest;
+use Takuya\LEClientDNS01\Acme\Requests\StartNewOrderDirectoryRequest;
 
 class AcmeDirectory {
   protected object $directory;
@@ -19,20 +20,24 @@ class AcmeDirectory {
     return $this->directory = $this->directory ?? json_decode( file_get_contents( $this->url ) );
   }
   
-  public function getDirectoryUrl( AcmeEndpointEnum $resourceName ): string {
+  public function getDirectoryUrl( AcmeDirectoryEnum $resourceName ): string {
     return $this->directory()->{$resourceName->name};
   }
   
-  public function newNonceEndpoint():AcmeEndpointNewNonce {
-    return new AcmeEndpointNewNonce($this,AcmeEndpointEnum::newNonce);
+  public function createNewNonceRequest( ?AcmeNonce $nonce = null ): RequestNewNonceDirectoryRequest {
+    $nonce = $nonce ?? new AcmeNonce();
+    $url = $this->getDirectoryUrl( AcmeDirectoryEnum::newNonce );
+    return new RequestNewNonceDirectoryRequest( $nonce, $url );
   }
-  public function newAccountEndpoint():AcmeEndpointNewAccount {
-    return new AcmeEndpointNewAccount($this,AcmeEndpointEnum::newAccount);
+  
+  public function createNewAccountRequest( AcmeNonce   $nonce,
+                                           AcmeAccount $account ): RegisterNewAccountDirectoryRequest {
+    $url = $this->getDirectoryUrl( AcmeDirectoryEnum::newAccount );
+    return new RegisterNewAccountDirectoryRequest( $nonce, $account, $url, 'POST' );
   }
-  public function newOrderEndpoint():AcmeEndpointNewOrder {
-    return new AcmeEndpointNewOrder($this,AcmeEndpointEnum::newOrder);
-  }
-  public function revokeCertURL() {
-    return $this->getDirectoryUrl(AcmeEndpointEnum::revokeCert);
+  
+  public function createNewOrderRequest( AcmeNonce $nonce, AcmeAccount $account ): StartNewOrderDirectoryRequest {
+    $url = $this->getDirectoryUrl( AcmeDirectoryEnum::newOrder );
+    return new StartNewOrderDirectoryRequest( $nonce, $account, $url );
   }
 }

@@ -4,7 +4,7 @@ namespace Takuya\LEClientDNS01\Acme\Requests;
 
 use Takuya\LEClientDNS01\Acme\Resources\AcmeAuthorizationChallenge;
 
-class ChallengeAuthorizeCheckRequest extends AcmeRequest {
+class ChallengeAuthorizeCheckRequest extends AcmeOrderRequest {
   
   public string $method = 'GET';
   

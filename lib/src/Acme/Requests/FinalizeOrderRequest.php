@@ -6,26 +6,27 @@ use Takuya\LEClientDNS01\Acme\AcmeAccount;
 use Takuya\LEClientDNS01\Acme\Resources\AcmeOrder;
 use Takuya\LEClientDNS01\Acme\Base64URLEncode;
 use Takuya\LEClientDNS01\Acme\Http\AcmeNonce;
+use Takuya\LEClientDNS01\Acme\Http\Rs256JwsSigner;
 
-class FinalizeOrderRequest extends AcmeRequest {
+class FinalizeOrderRequest extends AcmeOrderRequest {
   
   public string $method = 'POST';
   
   public function __construct(
     protected AcmeOrder    $order,
-    protected ?AcmeAccount $account,
+    protected AcmeAccount $account,
     protected AcmeNonce    $nonce,
     protected string       $csr_pem,
   ) {
   }
   
   protected function protectedStr(): string {
-    return parent::encodeObject( [
+    return Base64URLEncode::encode(json_encode( [
       "alg"   => "RS256",
       "kid"   => $this->account->kid(),
       "nonce" => $this->nonce->content(), // 取得済みの Nonce
       "url"   => $this->resource_url(),
-    ] );
+    ] ));
   }
   
   protected function resource_url() {
@@ -36,7 +37,7 @@ class FinalizeOrderRequest extends AcmeRequest {
     $body = json_encode( [
       "protected" => $p1 = $this->protectedStr(),
       "payload"   => $p2 = $this->payloadString(),
-      "signature" => $this->signatureString( $p1, $p2 ),
+      "signature" => Rs256JwsSigner::sign( $p1, $p2, $this->account->private_key_pem() )
     ] );
     return $body;
   }
@@ -45,7 +46,7 @@ class FinalizeOrderRequest extends AcmeRequest {
   public function getRequestUrl(): string {
     return $this->order->getFinalizeUrl();
   }
-  protected function __payload(): array {
+  protected function payload_csr(): array {
     //// PEMからヘッダー/フッター、改行を除去してバイナリに戻す
     //// 正規表現で ---BEGIN--- と ---END--- の間のベース64部分だけを抜く
     $innerBase64 = preg_replace( '/\-+BEGIN CERTIFICATE REQUEST\-+/', '', $this->csr_pem );
@@ -58,10 +59,7 @@ class FinalizeOrderRequest extends AcmeRequest {
     return $payload = ["csr" => $csrBase64Url];
     
   }
-  protected function signatureString( $protectedStr, $payloadStr ) {
-    return static::signature( $protectedStr, $payloadStr, $this->account->private_key_pem() );
-  }
   protected function payloadString() {
-    return Base64URLEncode::encode(json_encode($this->__payload()));
+    return Base64URLEncode::encode(json_encode($this->payload_csr()));
   }
 }

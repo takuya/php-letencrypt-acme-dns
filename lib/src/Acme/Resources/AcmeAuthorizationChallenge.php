@@ -15,7 +15,7 @@ class AcmeAuthorizationChallenge {
   public function createRequest(AcmeNonce $nonce, AcmeAccount $account):ChallengeAuthorizeRequest {
     return new ChallengeAuthorizeRequest($nonce,$account,$this,);
   }
-  public function createRequestForCheckPendingResult() {
+  public function createRequestForCheckPendingResult(): ChallengeAuthorizeCheckRequest {
     return new ChallengeAuthorizeCheckRequest($this);
     
   }
