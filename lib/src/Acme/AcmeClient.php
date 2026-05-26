@@ -19,9 +19,6 @@ class AcmeClient {
   public function __construct( protected AcmeDirectory $acmeDirectory ) {
     $this->dir_cli = new AcmeDirectoryClient( $this->acmeDirectory );
   }
-  public function getNonce():AcmeNonce {
-    return $this->nonce;
-  }
   
   public function newNonce(): AcmeNonce {
     return $this->nonce = $this->dir_cli->newNonce();
