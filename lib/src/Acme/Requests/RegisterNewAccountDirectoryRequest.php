@@ -6,7 +6,7 @@ namespace Takuya\LEClientDNS01\Acme\Requests;
 use Takuya\LEClientDNS01\Acme\AcmeAccount;
 use Takuya\LEClientDNS01\Acme\Http\AcmeNonce;
 use Takuya\LEClientDNS01\Acme\Http\JWT;
-use Takuya\LEClientDNS01\Acme\Base64URLEncode;
+use Takuya\LEClientDNS01\Acme\Http\Base64URLEncode;
 use Takuya\LEClientDNS01\Acme\Http\Rs256JwsSigner;
 
 class RegisterNewAccountDirectoryRequest extends AcmeDirectoryRequest {
@@ -34,7 +34,7 @@ class RegisterNewAccountDirectoryRequest extends AcmeDirectoryRequest {
   protected function protectedStr(): string {
     return Base64URLEncode::encode( json_encode( [
       "alg"   => "RS256",
-      "jwk"   => JWT::toArray( $this->account->private_key_pem() ),
+      "jwk"   => Rs256JwsSigner::extractRsaPubJwk( $this->account->private_key_pem() ),
       "nonce" => $this->nonce->content(),     // 取得済みの Nonce
       "url"   => $this->getRequestUrl(),   // Directoryから取得したURL
     ] ) );

@@ -4,7 +4,7 @@ namespace Takuya\LEClientDNS01\Acme\Requests;
 
 use Takuya\LEClientDNS01\Acme\AcmeAccount;
 use Takuya\LEClientDNS01\Acme\Resources\AcmeOrder;
-use Takuya\LEClientDNS01\Acme\Base64URLEncode;
+use Takuya\LEClientDNS01\Acme\Http\Base64URLEncode;
 use Takuya\LEClientDNS01\Acme\Http\AcmeNonce;
 use Takuya\LEClientDNS01\Acme\Http\Rs256JwsSigner;
 

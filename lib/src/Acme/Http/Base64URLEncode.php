@@ -1,6 +1,6 @@
 <?php
 
-namespace Takuya\LEClientDNS01\Acme;
+namespace Takuya\LEClientDNS01\Acme\Http;
 
 class Base64URLEncode {
   public static function encode(string $string): string {

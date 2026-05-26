@@ -6,7 +6,7 @@ use Takuya\LEClientDNS01\Acme\AcmeAccount;
 use Takuya\LEClientDNS01\Acme\Resources\AcmeAuthorizationChallenge;
 use Takuya\LEClientDNS01\Acme\Http\AcmeNonce;
 use Takuya\LEClientDNS01\Acme\Http\Rs256JwsSigner;
-use Takuya\LEClientDNS01\Acme\Base64URLEncode;
+use Takuya\LEClientDNS01\Acme\Http\Base64URLEncode;
 
 class ChallengeAuthorizeRequest extends AcmeOrderRequest {
   public function __construct(
