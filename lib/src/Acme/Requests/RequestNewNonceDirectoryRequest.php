@@ -2,18 +2,15 @@
 
 namespace Takuya\LEClientDNS01\Acme\Requests;
 
-use Takuya\LEClientDNS01\Acme\AcmeAccount;
-use Takuya\LEClientDNS01\Acme\Resources\Directory\AcmeEndpoint;
+use Takuya\LEClientDNS01\Acme\Http\AcmeNonce;
 
 class RequestNewNonceDirectoryRequest extends AcmeDirectoryRequest {
   
   public function __construct(
-    AcmeNonce     $nonce,
-    ?AcmeAccount  $account = null,
-    ?AcmeEndpoint $resource = null,
-    string        $method = 'GET' ) {
-    //
-    parent::__construct( $nonce, $account, $resource, $method );
+    protected AcmeNonce $nonce,
+    protected string    $endpoint_url,
+    protected string    $method = "GET"
+  ) {
   }
   
   public function getBody(): string {
@@ -22,5 +19,8 @@ class RequestNewNonceDirectoryRequest extends AcmeDirectoryRequest {
   
   public function getHeaders(): array {
     return [];
+  }
+  public function getRequestUrl(): string {
+    return $this->endpoint_url;
   }
 }

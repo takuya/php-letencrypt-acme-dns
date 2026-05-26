@@ -3,15 +3,18 @@
 namespace Takuya\LEClientDNS01\Acme\Requests;
 
 use Takuya\LEClientDNS01\Acme\Base64URLEncode;
-use Takuya\LEClientDNS01\Acme\AcmeAccount;
+use Takuya\LEClientDNS01\Acme\Http\AcmeNonce;
 
 abstract  class AcmeRequest {
   protected AcmeNonce $nonce;
-  protected ?AcmeAccount $account = null;
+  //protected ?AcmeAccount $account = null;
   protected string $method = 'POST';
   
   public static function encodeObject( array|object $data ): string {
     return Base64URLEncode::encode( json_encode( $data ) );
+  }
+  public static function encodeObjectUrlSafeSting(array|object $data):string{
+    return static::encodeObject($data);
   }
   
   public static function payload( $array ): string {

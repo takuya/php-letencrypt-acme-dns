@@ -2,7 +2,7 @@
 
 namespace Takuya\LEClientDNS01\Acme;
 
-use Takuya\LEClientDNS01\Acme\Requests\AcmeNonce;
+use Takuya\LEClientDNS01\Acme\Http\AcmeNonce;
 use Takuya\LEClientDNS01\Acme\Resources\AcmeDirectory;
 use Takuya\LEClientDNS01\Acme\Resources\AcmeOrder;
 use Takuya\LEClientDNS01\Acme\Http\AcmeDirectoryClient;

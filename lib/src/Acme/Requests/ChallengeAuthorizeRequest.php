@@ -4,6 +4,7 @@ namespace Takuya\LEClientDNS01\Acme\Requests;
 
 use Takuya\LEClientDNS01\Acme\AcmeAccount;
 use Takuya\LEClientDNS01\Acme\Resources\AcmeAuthorizationChallenge;
+use Takuya\LEClientDNS01\Acme\Http\AcmeNonce;
 
 class ChallengeAuthorizeRequest extends AcmeRequest {
   public function __construct(

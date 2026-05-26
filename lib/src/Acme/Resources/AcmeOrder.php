@@ -4,7 +4,7 @@ namespace Takuya\LEClientDNS01\Acme\Resources;
 
 use Psr\Http\Message\ResponseInterface;
 use Takuya\LEClientDNS01\Acme\AcmeAccount;
-use Takuya\LEClientDNS01\Acme\Requests\AcmeNonce;
+use Takuya\LEClientDNS01\Acme\Http\AcmeNonce;
 use Takuya\LEClientDNS01\Acme\Requests\FinalizeOrderRequest;
 use Takuya\LEClientDNS01\Acme\Requests\FinalizeOrderStatusRequest;
 
@@ -99,11 +99,6 @@ class AcmeOrder {
   
   public function createFinalizeStatusCheckRequest(): FinalizeOrderStatusRequest {
     return new FinalizeOrderStatusRequest( $this );
-  }
-  
-  public function updateLocation( ResponseInterface $res ) {
-    $this->url = $res->getHeaderLine( 'Location' );
-    return $this->url;
   }
   
 }

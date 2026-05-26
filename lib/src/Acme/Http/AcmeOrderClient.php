@@ -4,7 +4,6 @@ namespace Takuya\LEClientDNS01\Acme\Http;
 
 use Takuya\LEClientDNS01\Acme\Resources\AcmeOrder;
 use Takuya\LEClientDNS01\Acme\Resources\AcmeAuthorizationChallenge;
-use Takuya\LEClientDNS01\Acme\Requests\AcmeNonce;
 use Takuya\LEClientDNS01\Acme\Resources\AcmeChallengeType;
 
 class AcmeOrderClient {

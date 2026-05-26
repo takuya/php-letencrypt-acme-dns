@@ -3,15 +3,16 @@
 namespace Takuya\LEClientDNS01\Acme\Resources\Directory;
 
 use Takuya\LEClientDNS01\Acme\Requests\AcmeDirectoryRequest;
-use Takuya\LEClientDNS01\Acme\Requests\AcmeNonce;
+use Takuya\LEClientDNS01\Acme\Http\AcmeNonce;
 use Takuya\LEClientDNS01\Acme\AcmeAccount;
+use Takuya\LEClientDNS01\Acme\Requests\RegisterNewAccountDirectoryRequest;
 
 class AcmeEndpointNewAccount extends AcmeEndpoint {
   
   public function createRequest(
-    AcmeNonce   $nonce = null,
-    AcmeAccount $account = null,
+    AcmeNonce   $nonce,
+    AcmeAccount $account,
     string      $method = 'POST' ): AcmeDirectoryRequest {
-    return parent::createRequest( $nonce, $account, $method );
+    return new RegisterNewAccountDirectoryRequest($nonce,$account,$this->getUrl(),$method);
   }
 }

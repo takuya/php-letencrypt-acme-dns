@@ -1,6 +1,6 @@
 <?php
 
-namespace Takuya\LEClientDNS01\Acme\Requests;
+namespace Takuya\LEClientDNS01\Acme\Http;
 
 use Psr\Http\Message\ResponseInterface;
 

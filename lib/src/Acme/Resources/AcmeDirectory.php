@@ -3,7 +3,9 @@
 namespace Takuya\LEClientDNS01\Acme\Resources;
 
 use Takuya\LEClientDNS01\Acme\Resources\Directory\AcmeEndpointEnum;
-use Takuya\LEClientDNS01\Acme\Resources\Directory\AcmeEndpoint;
+use Takuya\LEClientDNS01\Acme\Resources\Directory\AcmeEndpointNewNonce;
+use Takuya\LEClientDNS01\Acme\Resources\Directory\AcmeEndpointNewAccount;
+use Takuya\LEClientDNS01\Acme\Resources\Directory\AcmeEndpointNewOrder;
 
 class AcmeDirectory {
   protected object $directory;
@@ -21,7 +23,16 @@ class AcmeDirectory {
     return $this->directory()->{$resourceName->name};
   }
   
-  public function getResource( AcmeEndpointEnum $name = null ): AcmeEndpoint {
-    return AcmeEndpoint::getResource( $this, $name );
+  public function newNonceEndpoint():AcmeEndpointNewNonce {
+    return new AcmeEndpointNewNonce($this,AcmeEndpointEnum::newNonce);
+  }
+  public function newAccountEndpoint():AcmeEndpointNewAccount {
+    return new AcmeEndpointNewAccount($this,AcmeEndpointEnum::newAccount);
+  }
+  public function newOrderEndpoint():AcmeEndpointNewOrder {
+    return new AcmeEndpointNewOrder($this,AcmeEndpointEnum::newOrder);
+  }
+  public function revokeCertURL() {
+    return $this->getDirectoryUrl(AcmeEndpointEnum::revokeCert);
   }
 }

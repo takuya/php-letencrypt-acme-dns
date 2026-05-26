@@ -3,7 +3,7 @@
 namespace Takuya\LEClientDNS01\Acme\Resources;
 
 use Takuya\LEClientDNS01\Acme\Requests\ChallengeAuthorizeRequest;
-use Takuya\LEClientDNS01\Acme\Requests\AcmeNonce;
+use Takuya\LEClientDNS01\Acme\Http\AcmeNonce;
 use Takuya\LEClientDNS01\Acme\AcmeAccount;
 use Takuya\LEClientDNS01\Acme\Requests\ChallengeAuthorizeCheckRequest;
 
