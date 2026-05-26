@@ -8,7 +8,6 @@ use Psr\Http\Message\ResponseInterface;
 use Takuya\LEClientDNS01\Acme\Requests\StartNewOrderDirectoryRequest;
 use Takuya\LEClientDNS01\Acme\Resources\AcmeDirectory;
 use Takuya\LEClientDNS01\Acme\Resources\AcmeAuthorizationChallenge;
-use GuzzleHttp\Psr7\Request;
 use Takuya\LEClientDNS01\Acme\Resources\AcmeOrder;
 
 /**

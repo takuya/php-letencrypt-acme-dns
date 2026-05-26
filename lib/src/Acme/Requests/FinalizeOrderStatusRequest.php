@@ -2,7 +2,6 @@
 
 namespace Takuya\LEClientDNS01\Acme\Requests;
 
-use Takuya\LEClientDNS01\Acme\Resources\AcmeAuthorizationChallenge;
 use Takuya\LEClientDNS01\Acme\Resources\AcmeOrder;
 
 class FinalizeOrderStatusRequest extends AcmeRequest {

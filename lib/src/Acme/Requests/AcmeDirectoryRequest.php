@@ -2,7 +2,6 @@
 
 namespace Takuya\LEClientDNS01\Acme\Requests;
 
-use Takuya\LEClientDNS01\Acme\Base64URLEncode;
 use Takuya\LEClientDNS01\Acme\AcmeAccount;
 use Takuya\LEClientDNS01\Acme\Resources\Directory\AcmeEndpoint;
 
@@ -24,9 +23,11 @@ abstract class AcmeDirectoryRequest extends AcmeRequest {
       "url"   => $url,   // Directoryから取得したURL
     ] );
   }
+  
   protected function resource_url(): string {
     return $this->resource->getUrl();
   }
+  
   public function getRequestUrl(): string {
     return $this->resource_url();
   }

@@ -2,7 +2,6 @@
 
 namespace Takuya\LEClientDNS01\Acme;
 
-use Takuya\LEClientDNS01\Acme\Requests\AcmeDirectoryRequest;
 use GuzzleHttp\Psr7\Request;
 use Takuya\LEClientDNS01\Acme\Requests\AcmeRequest;
 
