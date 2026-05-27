@@ -39,7 +39,9 @@ class AcmeOrder {
   public function getAccount():AcmeAccount {
     return $this->account;
   }
-  
+  public function getIdentifiers(): array {
+    return $this->identifiers;
+  }
   public function getOrderUrl(): string {
     return $this->url;
   }

@@ -9,7 +9,6 @@ use Takuya\LEClientDNS01\Acme\Http\AcmeDirectoryClient;
 use Takuya\LEClientDNS01\Acme\Http\AcmeOrderClient;
 use Takuya\LEClientDNS01\Acme\Resources\AcmeChallengeTypeEnum;
 use Takuya\LEClientDNS01\Acme\Resources\AcmeRevokeCertReason;
-use Takuya\LEClientDNS01\Acme\Http\Base64URLEncode;
 use Takuya\LEClientDNS01\Acme\Resources\AcmeDirectoryEnum;
 
 /**

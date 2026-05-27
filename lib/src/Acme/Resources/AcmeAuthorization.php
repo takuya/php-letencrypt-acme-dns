@@ -8,7 +8,7 @@ class AcmeAuthorization {
   protected object $authorization;
   
   public function __construct(
-    protected string    $domain_name,
+    protected string    $identifier_value,
     protected string    $url,
     protected AcmeOrder $order ) {
   }
@@ -20,9 +20,8 @@ class AcmeAuthorization {
   
   /**
    * @param AcmeChallengeTypeEnum $type http-01,dns-01,tls-alpn-01
-   * @return object|null
    */
-  public function getChallenge( AcmeChallengeTypeEnum $type ): object {
+  public function getChallenge( AcmeChallengeTypeEnum $type ): AcmeAuthorizationChallenge {
     $found = null;
     foreach ( $this->challenges() as $challenge ) {
       if( strcasecmp( $challenge->type, $type->value ) === 0 ) {

@@ -55,10 +55,18 @@ class CSRSubject {// ドメイン名証明書用のCSRなので、CSRではな�
    * @return string CSR as PEM.
    */
   public function getRequest( \OpenSSLAsymmetricKey $pkey):string {
-    $csr = openssl_csr_new($this->toArray(),$pkey,$this->csrConfig($tmp=sys_get_temp_dir().DIRECTORY_SEPARATOR.RandomString::gen(10)));
+    $csr= $this->opensslCsr($pkey);
+    return static::CsrToPem($csr);
+  }
+  public static function CsrToPem(OpenSSLCertificateSigningRequest $csr):string {
     openssl_csr_export($csr,$csrText);
-    @unlink($tmp);
     return $csrText;
+  }
+  public function opensslCsr(\OpenSSLAsymmetricKey $pkey):OpenSSLCertificateSigningRequest {
+    $tmp=sys_get_temp_dir().DIRECTORY_SEPARATOR.RandomString::gen(10);
+    $csr = openssl_csr_new($this->toArray(),$pkey,$this->csrConfig($tmp));
+    @unlink($tmp);
+    return $csr;
   }
   public function csrConfig(string $tmp_file_path) {
     $sanString = "DNS:" . implode(",DNS:", $this->subjectAlternativeNames);

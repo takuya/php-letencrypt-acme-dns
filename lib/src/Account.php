@@ -26,6 +26,12 @@ class Account {
       private_key: ( new AsymmetricKey() )->privKey(),
     );
   }
+  public function email_address():string {
+    return $this->contact[0];
+  }
+  public function setAccountUrl(string $url) {
+    $this->account_url = $url;
+  }
   
   
   public function toJson (): string {
