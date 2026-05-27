@@ -8,4 +8,5 @@ enum AcmeDirectoryEnum {
   case newNonce;
   case newOrder;
   case revokeCert;
+  case renewalInfo;
 }

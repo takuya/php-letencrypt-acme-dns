@@ -9,6 +9,8 @@ use Takuya\LEClientDNS01\Acme\Http\AcmeDirectoryClient;
 use Takuya\LEClientDNS01\Acme\Http\AcmeOrderClient;
 use Takuya\LEClientDNS01\Acme\Resources\AcmeChallengeTypeEnum;
 use Takuya\LEClientDNS01\Acme\Resources\AcmeRevokeCertReason;
+use Takuya\LEClientDNS01\Acme\Http\Base64URLEncode;
+use Takuya\LEClientDNS01\Acme\Resources\AcmeDirectoryEnum;
 
 /**
  * 全体の流れをここで管理する。
@@ -61,9 +63,15 @@ class AcmeClient {
   }
   
   public function getCertificate(AcmeOrder $order): string {
-    if (empty($certificate_url = $order->getCertificateUrl())){
-      throw new \RuntimeException('order is not finalized.');
-    }
-    return file_get_contents($certificate_url);
+    $ret = file_get_contents($order->getCertificateUrl());
+    //dump($http_response_header);
+    return $ret;
+  }
+  public function renewalInfo(string $cert_pem):object{
+    $cert_id = (new X509SSLCertificate($cert_pem))->acme_cert_id();
+    $url = "{$this->acmeDirectory->getDirectoryUrl(AcmeDirectoryEnum::renewalInfo)}/{$cert_id}";
+    $content = file_get_contents($url);
+    //dump($http_response_header);
+    return json_decode($content);
   }
 }

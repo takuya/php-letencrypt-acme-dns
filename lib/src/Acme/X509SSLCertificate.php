@@ -3,6 +3,7 @@
 namespace Takuya\LEClientDNS01\Acme;
 
 use Takuya\LEClientDNS01\PKey\SSLCertificateInfo;
+use Takuya\LEClientDNS01\Acme\Http\Base64URLEncode;
 
 class X509SSLCertificate {
   
@@ -39,14 +40,30 @@ class X509SSLCertificate {
   public function fullChainCertPem(): string {
     return implode( '', array_map( function( $c ) {
       openssl_x509_export( $c, $p );
-      if ( !$p ){throw new \RuntimeException("invalid certificate.");}
-      return $p;}, $this->fullChainCerts() ) );
+      if( !$p ) {
+        throw new \RuntimeException( "invalid certificate." );
+      }
+      return $p;
+    }, $this->fullChainCerts() ) );
+  }
+  
+  public function acme_cert_id():string {
+    return sprintf("%s.%s",
+      Base64URLEncode::encode( hex2bin( str_replace( ':', '', $this->authorityKeyIdentifier() ) ) ),
+      Base64URLEncode::encode( hex2bin( $this->serial() ) ));
+  }
+  public function authorityKeyIdentifier() {
+    return openssl_x509_parse( $this->certificate )['extensions']['authorityKeyIdentifier'];
+  }
+  public function serial() {
+    return openssl_x509_parse( $this->certificate )['serialNumberHex'];
   }
   
   public function __toString() {
     return $this->fullChainCertPem();
   }
-  public function export():string {
+  
+  public function export(): string {
     return $this->__toString();
   }
   
@@ -78,15 +95,16 @@ class X509SSLCertificate {
       'intermediates' => array_slice( $certs, 1 ),
     ];
   }
-  public static function convertPemToDer( string $certificate_pem):string{
-    $certificate_pem = trim($certificate_pem);
+  
+  public static function convertPemToDer( string $certificate_pem ): string {
+    $certificate_pem = trim( $certificate_pem );
     $cert_body = preg_replace(
       '/-----BEGIN CERTIFICATE-----|-----END CERTIFICATE-----|\s/',
       '',
       $certificate_pem
     );
     
-    $certificate_der = base64_decode($cert_body);
+    $certificate_der = base64_decode( $cert_body );
     return $certificate_der;
   }
 }
