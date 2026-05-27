@@ -15,30 +15,42 @@ class AcmeAccount {
    * @param string|null $account_url kid
    */
   public function __construct(
-    protected string $email,
-    protected ?string $private_key=null,
-    protected ?string $account_url=null,
+    protected string  $email,
+    protected ?string $private_key = null,
+    protected ?string $account_url = null,
   ) {
-    if (empty($private_key)){
-      $this->private_key = (new AsymmetricKey())->privKey();
+    if( empty( $private_key ) ) {
+      $this->private_key = ( new AsymmetricKey() )->privKey();
     }
   }
+  
   public function private_key_pem(): string {
     return $this->private_key;
   }
-  public function email():string {
+  
+  public function email(): string {
     return $this->email;
   }
-  public function updateAccountUrl(ResponseInterface $response):string {
-    $kid = $response->getHeaderLine('Location');
+  
+  public function updateAccountUrl( ResponseInterface $response ): string {
+    $kid = $response->getHeaderLine( 'Location' );
     $this->account_url = $kid;
     return $kid;
   }
-  public function getAccountUrl():string {
+  
+  public function getAccountUrl(): string {
     return $this->account_url;
   }
-  public function kid():string {
+  
+  public function kid(): string {
     return $this->getAccountUrl();
   }
   
+  public function toArray():array {
+    return [
+      'email' => $this->email(),
+      'pkey' => $this->private_key_pem(),
+      'kid' => $this->kid()
+    ];
+  }
 }

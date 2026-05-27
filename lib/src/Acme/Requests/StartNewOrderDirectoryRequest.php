@@ -56,7 +56,6 @@ class StartNewOrderDirectoryRequest extends AcmeDirectoryRequest {
       "protected" => $p1 = $this->protectedStr(),
       "payload"   => $p2 = $this->payloadString(),
       "signature" => Rs256JwsSigner::sign( $p1, $p2, $this->account->private_key_pem() ),
-    
     ] );
     return $body;
   }

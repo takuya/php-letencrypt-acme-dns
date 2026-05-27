@@ -5,6 +5,7 @@ namespace Takuya\LEClientDNS01\Acme\Http;
 use Takuya\LEClientDNS01\Acme\Resources\AcmeDirectory;
 use Psr\Http\Message\ResponseInterface;
 use Takuya\LEClientDNS01\Acme\AcmeAccount;
+use Takuya\LEClientDNS01\Acme\Resources\AcmeRevokeCertReason;
 
 class AcmeDirectoryClient {
   
@@ -50,6 +51,13 @@ class AcmeDirectoryClient {
     static::updateNonce( $nonce, $res );
     $body = json_decode( $res->getBody()->getContents() );
     return ['new_order' => $body, 'new_nonce' => $nonce->content(), 'order_url' => $res->getHeaderLine( 'Location' )];
+  }
+  
+  public function revokeCert( AcmeAccount $account, \OpenSSLCertificate $cert, AcmeNonce $nonce,AcmeRevokeCertReason $reason ): bool {
+    $req = $this->acmeDirectory->createRevokeCertRequest($account,$cert,$nonce, $reason);
+    $res = AcmeHttpClient::send($req);
+    static::updateNonce( $nonce, $res );
+    return $res->getStatusCode()==200;
   }
   
   public static function updateNonce( AcmeNonce $nonce, ResponseInterface $res ): string {

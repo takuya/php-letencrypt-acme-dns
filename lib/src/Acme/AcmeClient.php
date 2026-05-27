@@ -8,6 +8,7 @@ use Takuya\LEClientDNS01\Acme\Resources\AcmeOrder;
 use Takuya\LEClientDNS01\Acme\Http\AcmeDirectoryClient;
 use Takuya\LEClientDNS01\Acme\Http\AcmeOrderClient;
 use Takuya\LEClientDNS01\Acme\Resources\AcmeChallengeTypeEnum;
+use Takuya\LEClientDNS01\Acme\Resources\AcmeRevokeCertReason;
 
 /**
  * 全体の流れをここで管理する。
@@ -42,6 +43,9 @@ class AcmeClient {
     $new_order->setOrderUrl( $order_url );
     $new_order->setAccount($account);
     return $new_order;
+  }
+  public function revokeCert(AcmeAccount $account, \OpenSSLCertificate $cert, AcmeRevokeCertReason $reason=AcmeRevokeCertReason::cessationOfOperation):bool {
+    return $this->dir_cli->revokeCert($account, $cert , $this->nonce, $reason);
   }
   
   public function challengeAuthorization( AcmeOrder $order, string $domain, AcmeChallengeTypeEnum $type=AcmeChallengeTypeEnum::DNS01 ): void {
