@@ -23,13 +23,13 @@ use Takuya\LEClientDNS01\Acme\X509SSLCertificate;
  *    - domain name => task
  * - Account
  */
-class AcmePHPWrapper {
+class AcmeDvWrapper {
   
   
   protected string $directory_url;
   protected AcmeClient $acme_cli;
   protected AcmeAccount $acme_account;
-  protected AcmeWrapperCertificateOrder $order;
+  protected AcmeDvCertificateOrder $order;
   protected X509SSLCertificate $issuedCertificate;
   
   public function __construct (string $directory_url ) {
@@ -46,7 +46,7 @@ class AcmePHPWrapper {
   }
   public function newOrder ( array $domain_names ): void {
     $order = $this->acme_cli->newOrder($this->acme_account,$domain_names );
-    $this->order = new AcmeWrapperCertificateOrder($order);
+    $this->order = new AcmeDvCertificateOrder($order);
     $this->order->setOrderDomains($domain_names);
   }
   /**
@@ -63,10 +63,10 @@ class AcmePHPWrapper {
     $this->acme_cli->challengeAuthorization($this->order->getAcmeOrder(), $domain_name);
   }
   
-  public function createCSRSubject(string $country_name ="JP", string $state = "Osaka") {
+  public function createCSRSubject( array $domain_names,string $country_name ="JP", string $state = "Osaka"): CSRSubject {
     $dn = new CSRSubject( ...[
-      'commonName'              => $this->domain_names[0],
-      'subjectAlternativeNames' => $this->domain_names,
+      'commonName'              => $domain_names[0],
+      'subjectAlternativeNames' => $domain_names,
       'countryName'             => $country_name,
       'stateOrProvinceName'     => $state,
     ] );

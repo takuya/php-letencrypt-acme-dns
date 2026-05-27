@@ -5,7 +5,7 @@ namespace Takuya\LEClientDNS01\Delegators;
 use Takuya\LEClientDNS01\Acme\Resources\AcmeOrder;
 use Takuya\LEClientDNS01\PKey\CSRSubject;
 
-class AcmeWrapperCertificateOrder {
+class AcmeDvCertificateOrder {
   
   protected AcmeOrder $body;
   /**

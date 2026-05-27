@@ -4,7 +4,7 @@ namespace Takuya\LEClientDNS01;
 
 use Takuya\LEClientDNS01\PKey\AsymmetricKey;
 use Takuya\LEClientDNS01\PKey\CSRSubject;
-use Takuya\LEClientDNS01\Delegators\AcmePHPWrapper;
+use Takuya\LEClientDNS01\Delegators\AcmeDvWrapper;
 use Takuya\LEClientDNS01\PKey\CertificateWithPrivateKey;
 use Takuya\LEClientDNS01\Plugin\DNS\DNSPlugin;
 use function Takuya\Utils\base_domain;
@@ -16,7 +16,7 @@ class LetsEncryptAcmeDNS {
   
   /** @var Monolog\Logger */
   protected $logger;
-  protected AcmePHPWrapper $acme_cli;
+  protected AcmeDvWrapper $acme_cli;
   /** @var DnsPlugin[] */
   protected array $plugins = [];
   protected string $acme_uri;
@@ -65,9 +65,9 @@ class LetsEncryptAcmeDNS {
     return $domain_names;
   }
   
-  protected function initAcmePHP ( $acme_uri ): AcmePHPWrapper {
+  protected function initAcmePHP ( $acme_uri ): AcmeDvWrapper {
     $private_key = $this->owner->private_key;
-    $cli = new AcmePHPWrapper( $private_key, $acme_uri );
+    $cli = new AcmeDvWrapper( $private_key, $acme_uri );
     // refresh account info
     if (empty($this->owner->key['n'])){
       $account_array = $cli->newAccount( $this->owner->contact[0] );
