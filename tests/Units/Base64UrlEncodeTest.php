@@ -5,7 +5,7 @@ namespace tests\Units;
 use tests\TestCase;
 use function Takuya\Utils\base64_url_encode;
 use function Takuya\Utils\base64_url_decode;
-use Takuya\LEClientDNS01\Acme\Base64URLEncode;
+use Takuya\LEClientDNS01\Acme\Http\Base64URLEncode;
 
 class Base64UrlEncodeTest extends TestCase {
   
