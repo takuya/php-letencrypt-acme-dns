@@ -17,7 +17,7 @@ use Takuya\LEClientDNS01\Acme\Store\AcmeAccountStore;
 use Takuya\LEClientDNS01\Acme\Store\AcmeCertificateStore;
 use Takuya\LEClientDNS01\PKey\CertificateWithPrivateKey;
 use Takuya\LEClientDNS01\DNSChallengeTask;
-use Takuya\LEClientDNS01\Delegators\AcmePHPWrapper;
+use Takuya\LEClientDNS01\Delegators\AcmeDvWrapper;
 use Takuya\LEClientDNS01\Account;
 
 
@@ -57,7 +57,7 @@ $sub_domain = sprintf("guzzle-sample-%s.%s",RandomString::gen(5,RandomString::LO
 
 //$key = new AsymmetricKey(file_get_contents('sample.pkey'));
 $key = new AsymmetricKey();
-$cli = new AcmePHPWrapper(STAGING);
+$cli = new AcmeDvWrapper(STAGING);
 //// [ACME Step 2] Initial Nonce取得: 署名に必要な使い捨てトークンを取得
 $account = Account::create("admin@{$sub_domain}");
 $cli->newAccount($account);
@@ -73,7 +73,7 @@ foreach ( $challenges as $challenge ) {
 }
 ////
 //
-$dn = $cli->createCSRSubject();
+$dn = $cli->createCSRSubject([$sub_domain]);
 $domain_pkey = openssl_pkey_new( ['private_key_type' => OPENSSL_KEYTYPE_RSA, 'private_key_bits' => 4096] );
 $cli->finalizeOrderCertificate($dn->opensslCsr( $domain_pkey ));
 $cert = $cli->certificateLastIssued();
