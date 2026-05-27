@@ -55,9 +55,9 @@ $res = $cli->request('GET' , $dir->newNonce);
 $nonce = $res->getHeaderLine('Replay-Nonce');
 
 // [ACME Step 3] newAccount: 公開鍵を登録してアカウントを作成(JWK署名)
-$pkey = new AsymmetricKey();
+$account_pkey = new AsymmetricKey();
 /** @var OpenSSLAsymmetricKey $key */
-$ret =openssl_pkey_get_details($openSSL_asymmetric_key=openssl_pkey_get_private($pkey->privKey()));
+$ret =openssl_pkey_get_details($openSSL_asymmetric_key=openssl_pkey_get_private($account_pkey->privKey()));
 $jwt= [
   // 順番は重要
   'e' => base64_url_encode($ret['rsa']['e']),
@@ -96,6 +96,8 @@ $res = $cli->request('POST',$dir->newAccount,[
 ]);
 
 //dump( json_decode($res->getBody()->getContents())?->status =='valid' );
+dump($obj=json_decode($res->getBody()->getContents()));
+dd(["kid"=>$res->getHeaderLine("Location")]);
 $kid = $res->getHeaderLine("Location");
 $nonce = $res->getHeaderLine("Replay-Nonce");
 /////////////////////////////////////////////////////////////////////////////////
@@ -286,3 +288,16 @@ dump($certificateUrl);
 $res = $cli->request('GET', $certificateUrl);
 $cert = $res->getBody()->getContents();
 dump(new SSLCertificateInfo($cert));
+
+dump(
+  [
+    'cert'=>[
+      'domain_priv_key'=> $domain_pkey,
+      'domain_certificate'=>$cert
+    ],
+    'account'=>[
+      'account_private_key'=> $account_pkey,
+      'account_url(kid)' => $kid
+    ]
+  ]
+);
