@@ -5,6 +5,7 @@ namespace Takuya\Utils;
 use Net_DNS2_Resolver;
 use Net_DNS2_Lookups;
 use Net_DNS2_Exception;
+use function PHPUnit\Framework\matches;
 
 if ( !function_exists( __NAMESPACE__.'\dns_resolve' ) ) {
   /**
@@ -15,16 +16,16 @@ if ( !function_exists( __NAMESPACE__.'\dns_resolve' ) ) {
    * @return string
    * @throws Net_DNS2_Exception
    */
-  function  dns_resolve ( string $name, string $type, $ns_server=null ): string {
+  function  dns_resolve ( string $name, string $type, $ns_server=null, $timeout=5 ): string {
     $type = strtoupper( $type );
     $ns_server = $ns_server ?? domain_ns( $name );
     $ns_server_ips = assert_ipv4_address( $ns_server ) ? [$ns_server]
       : array_map( fn( $e ) => $e['ip'], dns_get_record( $ns_server, DNS_A ) );
     try {
-      $resolver = new Net_DNS2_Resolver( ['nameservers' => $ns_server_ips, 'timeout' => 5] );
+      $resolver = new Net_DNS2_Resolver( ['nameservers' => $ns_server_ips, 'timeout' => $timeout] );
       $result = $resolver->query( $name, $type );
       $content = match ( $type ) {
-        "A" => array_map( fn( $e ) => $e->address, $result->answer ),
+        "A" => array_map( fn( $e ) => $e->address, array_filter($result->answer,fn($e)=>$e->type=="A")),
         "NS" => array_map( fn( $e ) => $e->nsdname, $result->answer ),
         "SOA" => array_map( fn( $e ) => $e->mname, $result->answer ),
         "TXT" => array_map( fn( $e ) => join(PHP_EOL, $e?->text ),
@@ -44,10 +45,23 @@ if ( !function_exists( __NAMESPACE__.'\dns_resolve' ) ) {
         return '';
       }
       if ( Net_DNS2_Lookups::E_NS_SOCKET_FAILED == $e->getCode() ) {
-        file_put_contents( 'php://stderr','Network Error. Check outbound udp/53 opened.' );
+        // file_put_contents( 'php://stderr','Network Error. Check outbound udp/53 opened.'.PHP_EOL );
         throw $e;
       }
       throw $e;
     }
   }
+  function is_directly_resolve_allowed( $name, $timeout=1):bool{
+    try{
+      dns_resolve( $name, "A", null, $timeout );
+      return true;
+    }catch(\Exception $e) {
+      return match($e->getCode()) {
+        Net_DNS2_Lookups::E_NS_SOCKET_FAILED => false,
+        Net_DNS2_Lookups::RCODE_NXDOMAIN => true,
+        default => false
+      };
+    }
+  }
+  
 }

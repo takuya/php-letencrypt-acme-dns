@@ -13,24 +13,26 @@ class CloudflarePluginTest extends CertTestCase {
   public function test_add_remove_txt_record(){
     $pair1 =[$this->base_domain1, $this->cf_api_token1];
     $pair2 =[$this->base_domain2, $this->cf_api_token2];
-    //dump([$pair1,$pair2]);
+    //
     [$zone_domain,$token] = $pair1;
     $cf = new CloudflareDNSPlugin($token,$zone_domain);
-    $cf->isExists('bit');
     //
     [$name,$content] = [
       sprintf("%s.php-le-test.{$zone_domain}",RandomString::gen( 5, RandomString::LOWER )),
       sprintf("sample-api-%s",RandomString::gen( 15, RandomString::ALPHA )),
     ];
+    $this->assertFalse($cf->isExists($name));
     // add.
     $cf->addDnsTxtRecord($name,$content);
-    $cf->waitForUpdated($name,'txt',$content);
-    $this->assertEquals($content,$cf->query($name,'txt'));
+    //
+    if ($cf->canResolveDirectly()){
+      $cf->waitForUpdated($name,'txt',$content);
+      $this->assertEquals($content,$cf->query($name,'txt'));
+    }
     // remove.
     $cf->removeTxtRecord($name,$content);
     // assert removed.
-    $ret = $cf->isExists(sub_domain($name));
-    $this->assertFalse($ret);
+    $this->assertFalse($cf->isExists(sub_domain($name)));
     
   }
 }

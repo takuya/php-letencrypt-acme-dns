@@ -9,13 +9,13 @@ class CloudflareDNSRecord {
   protected \Cloudflare\API\Endpoints\DNS $cli;
   public string $zone_name;
   
-  public function __construct ( $api_token, $name ) {
+  public function __construct ( string $api_token, string $name ) {
     $this->zone_name = base_domain( $name );
     [$zone_id,$dns] = self::cf_factory($api_token,$this->zone_name);;
     $this->zone_id = $zone_id;
     $this->cli=$dns;
   }
-  protected static function cf_factory($api_token,$zone_domain) {
+  protected static function cf_factory(string $api_token,string $zone_domain) {
     $token = new \Cloudflare\API\Auth\APIToken( $api_token );
     $adapter = new \Cloudflare\API\Adapter\Guzzle( $token );
     $zone = new \Cloudflare\API\Endpoints\Zones( $adapter );
@@ -55,7 +55,7 @@ class CloudflareDNSRecord {
     return !empty( $ret ) ? $ret[0] : null;
   }
   
-  public function addRecord ( $type, $name, $content, $proxied = false ) {
+  public function addRecord ( $type, $name, $content, $proxied = false ):bool {
     $param = [
       'zoneID' => $this->zoneID(),
       'type' => $type,

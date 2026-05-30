@@ -7,7 +7,7 @@ if ( !function_exists( __NAMESPACE__ .'\get_certificate' ) ) {
     if ( empty( $domain ) ) {
       throw new \RuntimeException( 'domain name args ($domain) required' );
     }
-    $addr = "tls://${domain}:${port}";
+    $addr = "tls://{$domain}:{$port}";
     $ctx = stream_context_create( [
       'ssl' => [
         'verify_peer_name' => false,

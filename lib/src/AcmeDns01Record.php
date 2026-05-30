@@ -13,12 +13,12 @@ class AcmeDns01Record {
   ) {
   }
   
-  public function acme_domain_name (): string {
+  public function acme_challenge_domain_name (): string {
     return sprintf( "%s.%s", self::ACME_PREFIX, $this->domain );
   }
   
   public function acme_content (): string {
-    return base64_url_encode( hash( 'sha256', $this->payload, true ) );
+    return $this->payload;
   }
   
   

@@ -32,35 +32,50 @@ class AcmeDvWrapper {
   protected AcmeDvCertificateOrder $order;
   protected X509SSLCertificate $issuedCertificate;
   
+  protected const STATE_INITIALIZED=0x01;
+  protected const STATE_NEW_NONCE_ISSUED=0x02;
+  protected const STATE_ACCOUNT_REGISTERED=0x02;
+  protected const STATE_ORDERED=0x03;
+  protected const STATE_CHALLENGED=0x04;
+  protected const STATE_FINALIZED=0x05;
+  protected AcmeDvWrapperStatus $current_status;
+  
   public function __construct (string $directory_url ) {
     $this->directory_url = $directory_url;
     // cache AcmeClient becoase AcmeClient uses instance variable.
     $this->acme_cli = new AcmeClient(new AcmeDirectory($directory_url));
     $this->acme_cli->newNonce();
+    $this->updateState(AcmeDvWrapperStatus::NEW_NONCE_ISSUED);
+  }
+  protected function updateState(AcmeDvWrapperStatus $st){
+    $this->current_status = $st;
   }
   
   public function newAccount ( Account $account ):void {
     $this->acme_account = new AcmeAccount($account->email_address(),$account->getPrivateKey());
     $this->acme_cli->newAccount($this->acme_account);
     $account->setAccountUrl($this->acme_account->kid());
+    $this->updateState(AcmeDvWrapperStatus::ACCOUNT_REGISTERED);
   }
   public function newOrder ( array $domain_names ): void {
     $order = $this->acme_cli->newOrder($this->acme_account,$domain_names );
     $this->order = new AcmeDvCertificateOrder($order);
     $this->order->setOrderDomains($domain_names);
+    $this->updateState(AcmeDvWrapperStatus::ORDERED);
   }
   /**
    * @return AcmeDNSChallenge[]
    */
-  public function getDnsChallenge():array {
+  public function getDnsChallenges():array {
     $challenges = [];
     foreach ( $this->order->getDomainNames() as $orderDomain ) {
-      $challenges[] = $this->order->getDnsChallenge($orderDomain);
+      $challenges[$orderDomain] = $this->order->getDnsChallenge($orderDomain);
     }
     return $challenges;
   }
   public function challengeAuthorization(string $domain_name):void {
     $this->acme_cli->challengeAuthorization($this->order->getAcmeOrder(), $domain_name);
+    $this->updateState(AcmeDvWrapperStatus::CHALLENGED);
   }
   
   public function createCSRSubject( array $domain_names,string $country_name ="JP", string $state = "Osaka"): CSRSubject {
@@ -77,6 +92,10 @@ class AcmeDvWrapper {
     $this->acme_cli->finalize($this->order->getAcmeOrder(),CSRSubject::CsrToPem($csr));
     $cert_pem = $this->acme_cli->getCertificate($this->order->getAcmeOrder());
     $this->issuedCertificate = new X509SSLCertificate($cert_pem);
+    $this->updateState(AcmeDvWrapperStatus::FINALIZED);
+  }
+  public function getCurrentState():AcmeDvWrapperStatus{
+    return $this->current_status;
   }
   
   public function certificateLastIssued (): array {

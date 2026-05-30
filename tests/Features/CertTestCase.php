@@ -20,8 +20,8 @@ class CertTestCase extends TestCase {
   protected string $cf_api_token2;
   protected string $email;
   
-  protected function getInstanceLetsEncryptAcmeDNS (): LetsEncryptAcmeDNS {
-    return new LetsEncryptAcmeDNS( Account::create($this->email) );
+  protected function getInstanceLetsEncryptAcmeDNS (string $email): LetsEncryptAcmeDNS {
+    return new LetsEncryptAcmeDNS( Account::create($this->email=$email) );
   }
   
   protected function getInstanceCFDNSPlugin (): CloudflareDNSPlugin {

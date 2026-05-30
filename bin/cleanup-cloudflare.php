@@ -23,7 +23,7 @@ function load_env() {
   return $obj;
 }
 
-function remove_junk( $api_token, $zone_domain ) {
+function remove_junk( string $api_token, string $zone_domain ) {
   $method = new ReflectionMethod( CloudflareDNSRecord::class, 'cf_factory' );
   /** @var \Cloudflare\API\Endpoints\DNS $cf_cli */
   [$zone_id, $cf_cli] = $method->invokeArgs( null, [$api_token, $zone_domain] );

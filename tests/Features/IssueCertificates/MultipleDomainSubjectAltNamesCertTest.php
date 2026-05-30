@@ -1,9 +1,11 @@
 <?php
 
-namespace tests\Features;
+namespace tests\Features\IssueCertificates;
 
+use tests\Features\CertTestCase;
 use Takuya\RandomString\RandomString;
 use Takuya\LEClientDNS01\LetsEncryptACMEServer;
+use Takuya\LEClientDNS01\PKey\SSLCertificateInfo;
 
 class MultipleDomainSubjectAltNamesCertTest extends CertTestCase {
   public function test_issue_multiple_domain_certificate () {
@@ -16,7 +18,8 @@ class MultipleDomainSubjectAltNamesCertTest extends CertTestCase {
     ];
     // prepare
     $dns = $this->getInstanceCFDNSPlugin();
-    $cli = $this->getInstanceLetsEncryptAcmeDNS();
+    $cli = $this->getInstanceLetsEncryptAcmeDNS("admin-{$str}@{$this->base_domain}");
+    // start ACME
     $cli->setDomainNames( $domain_names );
     $cli->setAcmeURL( LetsEncryptACMEServer::STAGING );
     $cli->setDnsPlugin( $dns );
@@ -24,6 +27,7 @@ class MultipleDomainSubjectAltNamesCertTest extends CertTestCase {
     $new_cert = $cli->orderNewCert();
     // assertion
     $this->assertIsCert( $new_cert->cert() );
+    dump(new SSLCertificateInfo($new_cert->cert()));
     $this->assertLECertificateIssued( $new_cert->cert(), $domain_names );
   }
 }

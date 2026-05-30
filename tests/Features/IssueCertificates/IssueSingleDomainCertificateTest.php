@@ -1,7 +1,8 @@
 <?php
 
-namespace tests\Features;
+namespace tests\Features\IssueCertificates;
 
+use tests\Features\CertTestCase;
 use Takuya\RandomString\RandomString;
 use Takuya\LEClientDNS01\LetsEncryptACMEServer;
 
@@ -10,12 +11,10 @@ class IssueSingleDomainCertificateTest extends CertTestCase {
   public function test_single_domain_issue_cert () {
     // variables
     $str = RandomString::gen( 5, RandomString::LOWER );
-    $domain_names = [
-      "phpunit-{$str}.{$this->base_domain}",
-    ];
+    $domain_names = ["phpunit-{$str}.{$this->base_domain}"];
     // prepare
     $dns = $this->getInstanceCFDNSPlugin();
-    $cli = $this->getInstanceLetsEncryptAcmeDNS();
+    $cli = $this->getInstanceLetsEncryptAcmeDNS("admin-{$str}@{$this->base_domain}");
     $cli->setDomainNames( $domain_names );
     $cli->setAcmeURL( LetsEncryptACMEServer::STAGING );
     $cli->setDnsPlugin( $dns );

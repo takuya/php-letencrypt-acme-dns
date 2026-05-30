@@ -3,10 +3,12 @@ require_once __DIR__.DIRECTORY_SEPARATOR.'../vendor/autoload.php';
 
 use Takuya\LEClientDNS01\PKey\AsymmetricKey;
 use Takuya\RandomString\RandomString;
+use Takuya\LEClientDNS01\LetsEncryptAcmeDNS;
 use Takuya\LEClientDNS01\Acme\Resources\AcmeDirectory;
 use Takuya\LEClientDNS01\Acme\AcmeClient;
 use Takuya\LEClientDNS01\Acme\AcmeAccount;
 use Takuya\LEClientDNS01\Plugin\DNS\CloudflareDNSPlugin;
+use function Takuya\Utils\dns_resolve;
 use function Takuya\Utils\base64_url_encode;
 use Takuya\LEClientDNS01\PKey\CSRSubject;
 use Takuya\LEClientDNS01\PKey\SSLCertificateInfo;
@@ -19,7 +21,7 @@ use Takuya\LEClientDNS01\PKey\CertificateWithPrivateKey;
 use Takuya\LEClientDNS01\DNSChallengeTask;
 use Takuya\LEClientDNS01\Delegators\AcmeDvWrapperStatus;
 use Takuya\LEClientDNS01\Account;
-
+use function Takuya\Utils\is_directly_resolve_allowed;
 
 const STAGING = 'https://acme-staging-v02.api.letsencrypt.org/directory';
 
@@ -54,35 +56,19 @@ $base_domain = $env->base_domain1;
 $cf_api_token = $env->cf_api_token1;
 $sub_domain = sprintf("guzzle-sample-%s.%s",RandomString::gen(5,RandomString::LOWER),$base_domain);
 
-
-//$key = new AsymmetricKey(file_get_contents('sample.pkey'));
-$key = new AsymmetricKey();
-$cli = new AcmeDvWrapperStatus(STAGING);
-//// [ACME Step 2] Initial Nonce取得: 署名に必要な使い捨てトークンを取得
-$account = Account::create("admin@{$sub_domain}");
-$cli->newAccount($account);
-$cli->newOrder([$sub_domain]);
-$challenges = $cli->getDnsChallenges();
+$cli=new LetsEncryptAcmeDNS($account = Account::create("admin@{$sub_domain}"));
 $dns = new CloudflareDNSPlugin( $cf_api_token, $base_domain );
-$dns->enable_dns_check_at_waiting_for_update = true;
-foreach ( $challenges as $challenge ) {
-  $v = ['_acme-challenge.'.$challenge->getDomainName(),$challenge->getDnsValue()];
-  $dns->addDnsTxtRecord(...$v);
-  $dns->waitForUpdated($v[0],'TXT',$v[1], fn()=>dump('waiting..'));
-  $cli->challengeAuthorization($challenge->getDomainName());
-}
-////
-//
-$dn = $cli->createCSRSubject([$sub_domain]);
-$domain_pkey = openssl_pkey_new( ['private_key_type' => OPENSSL_KEYTYPE_RSA, 'private_key_bits' => 4096] );
-$cli->finalizeOrderCertificate($dn->opensslCsr( $domain_pkey ));
-$cert = $cli->certificateLastIssued();
-dump(new SSLCertificateInfo($cert['cert']));
+$cli->setDnsPlugin($dns);
+$cli->setAcmeURL(STAGING);
+$cli->setDomainNames([$sub_domain]);
+$cert = $cli->orderNewCert();
+
+dump(new SSLCertificateInfo($cert->fullChain()));
 dump(
   [
     'cert'=>[
-      'domain_priv_key'=> $domain_pkey,
-      'domain_certificate'=>$cli->certificateLastIssued()
+      'domain_priv_key'=> $cert->privKey(),
+      'domain_certificate'=>$cert->fullChain()
     ],
     //'account'=>[
     //  'account_private_key'=> $account->private_key_pem(),
@@ -90,4 +76,4 @@ dump(
     //]
   ]
 );
-
+//
