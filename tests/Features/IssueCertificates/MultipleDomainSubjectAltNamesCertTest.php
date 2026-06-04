@@ -27,7 +27,6 @@ class MultipleDomainSubjectAltNamesCertTest extends CertTestCase {
     $new_cert = $cli->orderNewCert();
     // assertion
     $this->assertIsCert( $new_cert->cert() );
-    dump(new SSLCertificateInfo($new_cert->cert()));
     $this->assertLECertificateIssued( $new_cert->cert(), $domain_names );
   }
 }

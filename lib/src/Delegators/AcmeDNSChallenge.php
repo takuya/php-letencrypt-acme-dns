@@ -16,6 +16,7 @@ class AcmeDNSChallenge {
   protected AcmeAccount $account;
   protected AcmeChallengeTypeEnum $type = AcmeChallengeTypeEnum::DNS01;
   
+  // TODO: remove body するか、このクラスが Authorizeすべき。
   public function __construct( string $domain_name,AcmeAuthorization $acmeAuthorization, AcmeAccount $account) {
     $this->domain_name = $domain_name;
     $this->body = $acmeAuthorization;

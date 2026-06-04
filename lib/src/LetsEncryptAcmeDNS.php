@@ -11,6 +11,7 @@ use Takuya\LEClientDNS01\PKey\CertificateWithPrivateKey;
 use function Takuya\Utils\base_domain;
 use function Takuya\Utils\parent_domain;
 use function Takuya\Utils\assert_str_is_domain;
+use function Takuya\Utils\is_wildcard_domain;
 
 class LetsEncryptAcmeDNS {
   
@@ -113,8 +114,15 @@ class LetsEncryptAcmeDNS {
    */
   protected function createChallengeTasks( array $challenges ):array {
     $tasks = [];
-    foreach ($challenges as $domain => $challenge) {
-      /** @var AcmeDNSChallenge $challenge */
+    $challenges_per_domain=[];
+    
+    //foreach ( $challenges as $domain => $c ) {
+    //  $challenges_per_domain[is_wildcard_domain($domain)? parent_domain($domain) : $domain][] = $c;
+    //}
+    //foreach ($challenges_per_domain as $domain => $challenges){
+    //  $tasks[$domain] = new DNSChallengeTask($challenges, $this->getDnsPlugin($domain));
+    //}
+    foreach ($challenges as $domain => $challenge){
       $tasks[$domain] = new DNSChallengeTask([$challenge], $this->getDnsPlugin($domain));
     }
     return $tasks;
@@ -128,9 +136,9 @@ class LetsEncryptAcmeDNS {
   /**
    * @throws \Throwable
    */
-  protected function processDNSTask ( array $challenges, AcmeDvWrapper $cli , callable $on_wait_from_user ): void {
+  protected function processDNSTask ( array $challengeTasks, AcmeDvWrapper $cli , callable $on_wait_from_user ): void {
     $fibers = [];
-    foreach ( $challenges as $key => $challenge ) {
+    foreach ( $challengeTasks as $key => $v ) {
       //
       $func = function( AcmeDvWrapper $cli, DNSChallengeTask $task, callable $on_wait ): bool {
         $task->start( fn($identifier)=> $cli->challengeAuthorization($identifier) , $on_wait );
@@ -139,13 +147,13 @@ class LetsEncryptAcmeDNS {
       $fibers[$key] = new \Fiber( $func );
     }
     // start
-    foreach ( $challenges as $key => $challenge ) {// TODO 見通しが悪い
-      $on_wait = function( $name, $type, $content ) use ( $on_wait_from_user ) {
+    foreach ( $challengeTasks as $key => $task ) {// TODO 見通しが悪い
+      $on_wait = function( $name, $type, $content, $elapsed ) use ( $on_wait_from_user ) {
         \Fiber::suspend( $content );
-        $on_wait_from_user( $name, $type, $content );
+        $on_wait_from_user( $name, $type, $content , $elapsed);
       };
       /** @var \Fiber[] $fibers */
-      $fibers[$key]->start( $cli , $challenge, $on_wait );
+      $fibers[$key]->start( $cli , $task, $on_wait );
     }
     // wait
     foreach ( $fibers as $fiber ) {

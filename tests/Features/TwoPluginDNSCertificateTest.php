@@ -14,10 +14,12 @@ class TwoPluginDNSCertificateTest extends CertTestCase {
     $str = 'phpunit-'.$str;
     $domain_names = [
       "*.{$str}.{$this->base_domain1}",
+      "{$str}.{$this->base_domain1}",
       "*.{$str}.{$this->base_domain2}",
+      "{$str}.{$this->base_domain2}",
     ];
     // prepare
-    $cli = $this->getInstanceLetsEncryptAcmeDNS();
+    $cli = $this->getInstanceLetsEncryptAcmeDNS("admin@{$str}.{$this->base_domain1}");
     $cli->setDomainNames( $domain_names );
     $cli->setAcmeURL( LetsEncryptACMEServer::STAGING );
     // set dns plugin per domain.

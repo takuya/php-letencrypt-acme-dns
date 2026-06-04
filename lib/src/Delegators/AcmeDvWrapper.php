@@ -32,12 +32,6 @@ class AcmeDvWrapper {
   protected AcmeDvCertificateOrder $order;
   protected X509SSLCertificate $issuedCertificate;
   
-  protected const STATE_INITIALIZED=0x01;
-  protected const STATE_NEW_NONCE_ISSUED=0x02;
-  protected const STATE_ACCOUNT_REGISTERED=0x02;
-  protected const STATE_ORDERED=0x03;
-  protected const STATE_CHALLENGED=0x04;
-  protected const STATE_FINALIZED=0x05;
   protected AcmeDvWrapperStatus $current_status;
   
   public function __construct (string $directory_url ) {

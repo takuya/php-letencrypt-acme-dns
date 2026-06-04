@@ -15,10 +15,11 @@ class DNSChallengeTask {
    */
   protected array $records;
   
+  /**
+   * @param AcmeDNSChallenge[]  $challenges DNS01 challenge. Note:[*.example.tld, example.tld] should be tied in together.
+   * @param DnsPluginContract   $dns
+   */
   public function __construct ( protected array $challenges, protected DnsPluginContract $dns ) {
-    /** @var AcmeDNSChallenge $item */
-    // ここなんで複数形になるんだっけ。。。。
-    // TODO:複数形を解決したほうがいいかもしれない。
     foreach ( $challenges as $item ) {
       $this->records[$item->getDomainName()] = new AcmeDns01Record( $item->getDomainName(), $item->getDnsValue() );
     }
@@ -37,12 +38,14 @@ class DNSChallengeTask {
     }
   }
   
-  // TODO 名前が良くない。これだとDNSレコードをチェックするように見える
-  protected function askVerified( callable $authorize_challenge ): void {
+  protected function askAcmeServerAuthorizeVerifyDnsTxtRecord( callable $authorize_challenge ): void {
     // todo
     foreach ( $this->records as $identifier=> $acme_dns01_record ) {
       $authorize_challenge($identifier);
     }
+  }
+  protected function onUpdated( callable $onUpdated):void{
+    $this->askAcmeServerAuthorizeVerifyDnsTxtRecord( $onUpdated );
   }
   
   protected function waitDNS ( callable $on_each_wait = null ): void {
@@ -57,15 +60,15 @@ class DNSChallengeTask {
     }
   }
   
-  public function start ( callable $authorize, callable $on_wait = null ): void {
+  public function start ( callable $challenge_authorize, callable $on_wait = null ): void {
     try {
       $this->updateDNSRecord();
       $this->waitDNS( $on_wait );
-      $this->askVerified( $authorize );
-      $this->cleanUpDnsRecord();
+      $this->onUpdated($challenge_authorize);
     } catch (\Exception $e) {
-      $this->cleanUpDnsRecord();
       throw $e;
+    } finally {
+      $this->cleanUpDnsRecord();
     }
   }
   

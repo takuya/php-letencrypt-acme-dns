@@ -5,6 +5,11 @@ namespace tests\Features\IssueCertificates;
 use tests\Features\CertTestCase;
 use Takuya\RandomString\RandomString;
 use Takuya\LEClientDNS01\LetsEncryptACMEServer;
+use function Takuya\Utils\domain_ns;
+use function Takuya\Utils\sub_domain;
+use function Takuya\Utils\is_wildcard_domain;
+use function Takuya\Utils\base_domain;
+use function Takuya\Utils\parent_domain;
 
 class MultipleAndWildcardCertificateTest extends CertTestCase {
   public function test_issue_multi_and_wildcard_domain_certificate () {
@@ -12,10 +17,11 @@ class MultipleAndWildcardCertificateTest extends CertTestCase {
     $str = RandomString::gen( 5, RandomString::LOWER );
     $str = 'phpunit-'.$str;
     $domain_names = [
-      "*.{$str}.{$this->base_domain}",
-      "{$str}.{$this->base_domain}"
+      "*.x.{$str}.{$this->base_domain}",
+      "{$str}.{$this->base_domain}",
+      "a.{$str}.{$this->base_domain}",
+      "b.{$str}.{$this->base_domain}"
     ];
-    // prepare
     $dns = $this->getInstanceCFDNSPlugin();
     $cli = $this->getInstanceLetsEncryptAcmeDNS("admin-{$str}@{$this->base_domain}");
     // start ACME

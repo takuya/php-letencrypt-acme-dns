@@ -1,11 +1,13 @@
 <?php
 
-namespace tests\Features;
+namespace tests\Features\IssueCertificates;
+
 
 use Takuya\RandomString\RandomString;
 use Takuya\LEClientDNS01\LetsEncryptACMEServer;
+use tests\Features\CertTestCase;
 
-class WildcardCertificateTest extends CertTestCase {
+class IssueWildcardCertificateTest extends CertTestCase {
   public function test_issue_wildcard_domain_certificate () {
     // variables
     $str = RandomString::gen( 5, RandomString::LOWER );
@@ -15,7 +17,7 @@ class WildcardCertificateTest extends CertTestCase {
     ];
     // prepare
     $dns = $this->getInstanceCFDNSPlugin();
-    $cli = $this->getInstanceLetsEncryptAcmeDNS();
+    $cli = $this->getInstanceLetsEncryptAcmeDNS("admin@{$str}.{$this->base_domain}");
     $cli->setDomainNames( $domain_names );
     $cli->setAcmeURL( LetsEncryptACMEServer::STAGING );
     $cli->setDnsPlugin( $dns );

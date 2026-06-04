@@ -66,6 +66,11 @@ if ( !function_exists( __NAMESPACE__.'\parent_domain' ) ) {
     }
   }
 }
+if ( !function_exists( __NAMESPACE__.'\is_wildcard_domain' ) ) {
+  function is_wildcard_domain ( string $domain_name ): bool {
+    return str_starts_with($domain_name,'*.');
+  }
+}
 
 
 
