@@ -1,10 +1,11 @@
 <?php
 
-namespace tests\Features;
+namespace tests\Features\IssueCertificates;
 
 use Takuya\RandomString\RandomString;
 use Takuya\LEClientDNS01\LetsEncryptACMEServer;
 use Takuya\LEClientDNS01\Plugin\DNS\CloudflareDNSPlugin;
+use tests\Features\CertTestCase;
 
 class TwoPluginDNSCertificateTest extends CertTestCase {
   public function test_issue_two_domain_two_dns_plugin_certificate () {

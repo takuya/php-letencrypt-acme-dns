@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__.DIRECTORY_SEPARATOR.'../vendor/autoload.php';
+require_once __DIR__.'/../../vendor/autoload.php';
 
 use Takuya\LEClientDNS01\Delegators\CloudflareDNSRecord;
 
@@ -30,7 +30,7 @@ function remove_junk( string $api_token, string $zone_domain ) {
   $ret = $cf_cli->listRecords( $zone_id, "TXT" )?->result;
   $junk_items = [];
   foreach ( $ret as $item ) {
-    if( str_contains( $item->name, 'le-test' ) || str_contains( $item->name, '_acme-challenge' ) ) {
+    if( str_contains( $item->name, 'le-test' ) || str_contains( $item->name, '_acme-challenge' ) ||str_contains( $item->name, 'phpunit' ) ) {
       $junk_items[] = $item;
     }
   }

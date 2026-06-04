@@ -156,7 +156,7 @@ $challenge = array_find($authDetails->challenges,fn($challenge)=>$challenge->typ
 
 $dns = new CloudflareDNSPlugin( $cf_api_token, $base_domain );
 dump('_acme-challenge.'.$sub_domain);
-$dns->enable_dns_check_at_waiting_for_update = true;
+$dns->enable_authoritative_check = true;
 $thumbprint = base64_url_encode(hash('sha256', json_encode($jwt), true));
 $keyAuthorization = $challenge->token . '.' . $thumbprint;
 $dnsValue = base64_url_encode(hash('sha256', $keyAuthorization, true));

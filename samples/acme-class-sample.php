@@ -17,8 +17,6 @@ use Takuya\LEClientDNS01\Acme\Store\AcmeAccountStore;
 use Takuya\LEClientDNS01\Acme\Store\AcmeCertificateStore;
 use Takuya\LEClientDNS01\PKey\CertificateWithPrivateKey;
 use Takuya\LEClientDNS01\DNSChallengeTask;
-use Takuya\LEClientDNS01\Delegators\AcmeDvWrapperStatus;
-use Takuya\LEClientDNS01\Account;
 
 
 const STAGING = 'https://acme-staging-v02.api.letsencrypt.org/directory';
@@ -57,32 +55,56 @@ $sub_domain = sprintf("guzzle-sample-%s.%s",RandomString::gen(5,RandomString::LO
 
 //$key = new AsymmetricKey(file_get_contents('sample.pkey'));
 $key = new AsymmetricKey();
-$cli = new AcmeDvWrapperStatus(STAGING);
+//// [ACME Step 1] Directory取得: 各機能のURL一覧を取得
+$dir = new AcmeDirectory(STAGING);
 //// [ACME Step 2] Initial Nonce取得: 署名に必要な使い捨てトークンを取得
-$account = Account::create("admin@{$sub_domain}");
-$cli->newAccount($account);
-$cli->newOrder([$sub_domain]);
-$challenges = $cli->getDnsChallenges();
+$cli = new AcmeClient($dir);
+$nonce = $cli->newNonce();
+
+dump($nonce);
+
+//// [ACME Step 3] newAccount: 公開鍵を登録してアカウントを作成(JWK署名)
+$account =new AcmeAccount("admin@{$sub_domain}",$key->privKey());
+$ret = $cli->newAccount($account);
+//// [ACME Step 4]
+$new_order = $cli->newOrder($account,[$sub_domain]);
+$authorization =$new_order->getAuthorization($sub_domain);// ココ、複数形になるかも
+// ドメイン名=> プラグインを登録する。DNS01 とは限らないわけで。
+$challenge = $authorization->getChallenge(AcmeChallengeTypeEnum::DNS01);
+//dump($challenge);
+////// [ACME Step 6] DNSレコード設置: TXTレコードを設定し反映を待機
 $dns = new CloudflareDNSPlugin( $cf_api_token, $base_domain );
-$dns->enable_dns_check_at_waiting_for_update = true;
-foreach ( $challenges as $challenge ) {
-  $v = ['_acme-challenge.'.$challenge->getDomainName(),$challenge->getDnsValue()];
-  $dns->addDnsTxtRecord(...$v);
-  $dns->waitForUpdated($v[0],'TXT',$v[1], fn()=>dump('waiting..'));
-  $cli->challengeAuthorization($challenge->getDomainName());
-}
+dump('_acme-challenge.'.$sub_domain);
+$dns->enable_authoritative_check = true;
+$thumbprint = base64_url_encode(hash('sha256', Rs256JwsSigner::JwkString($account->private_key_pem()), true));
+$keyAuthorization = $challenge->getAuthToken() . '.' . $thumbprint;
+$dnsValue = base64_url_encode(hash('sha256', $keyAuthorization, true));
+$dns->addDnsTxtRecord('_acme-challenge.'.$sub_domain,$dnsValue);
+$dns->waitForUpdated('_acme-challenge.'.$sub_domain,'TXT',$dnsValue, fn()=>dump('waiting..'));
 ////
 //
-$dn = $cli->createCSRSubject([$sub_domain]);
+$cli->challengeAuthorization($new_order,$sub_domain);
+
+// finalize
+$dn = new CSRSubject( ...[
+  'commonName'              => $sub_domain,
+  'subjectAlternativeNames' => [$sub_domain],
+  'countryName'             => 'JP',
+  'stateOrProvinceName'     => 'Osaka',
+] );
 $domain_pkey = openssl_pkey_new( ['private_key_type' => OPENSSL_KEYTYPE_RSA, 'private_key_bits' => 4096] );
-$cli->finalizeOrderCertificate($dn->opensslCsr( $domain_pkey ));
-$cert = $cli->certificateLastIssued();
-dump(new SSLCertificateInfo($cert['cert']));
+$csrPem = $dn->getRequest( $domain_pkey );
+
+$ret = $cli->finalize($new_order,$csrPem);
+//dump(['finalize'=>$ret]);
+$cert = $cli->getCertificate($new_order);
+dump(new SSLCertificateInfo($cert));
+
 dump(
   [
     'cert'=>[
       'domain_priv_key'=> $domain_pkey,
-      'domain_certificate'=>$cli->certificateLastIssued()
+      'domain_certificate'=>$cert
     ],
     //'account'=>[
     //  'account_private_key'=> $account->private_key_pem(),
@@ -90,4 +112,8 @@ dump(
     //]
   ]
 );
+
+AcmeAccountStore::save('sample-account.json', $account);
+openssl_pkey_export( $domain_pkey, $domain_pkey_pem );
+AcmeCertificateStore::save('sample-cert.json', new CertificateWithPrivateKey($domain_pkey_pem,$cert));
 
