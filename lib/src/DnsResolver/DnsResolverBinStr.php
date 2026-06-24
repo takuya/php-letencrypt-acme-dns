@@ -13,10 +13,10 @@ class DnsResolverBinStr extends DnsResolver {
       'type'   => static::getQueryType( static::getTypeInt( $type ) ),
       'server' => $ns_server,
     ];
-    $start = microtime(true);
+    $start = microtime( true );
     $response = static::send_query( $binary_packet, $ns_server, $timeout );
-    $elapsed = microtime(true) - $start;
-    if( $q['id'] != static::decodeQueryId( $response ) ) throw new \RuntimeException( 'packet id modfied' );
+    $elapsed = microtime( true ) - $start;
+    if( $q['id'] != static::decodeQueryId( $response ) ) throw new \RuntimeException( 'packet id modified' );
     $ret = static::parse_response( $response );
     return array_merge( ['QUERY' => [$q], 'TIME' => $elapsed], $ret );
   }
@@ -26,7 +26,7 @@ class DnsResolverBinStr extends DnsResolver {
     for ( $i = 0; $i < $cnt; $i++ ) {
       $ret = static::parseResponseRecord( $res_packet_bin, $start_pos );
       $start_pos += 12 + $ret['rdlength'];
-      if( empty( $ret['name'] ) ) { // OPT
+      if( $ret['type'] == static::getTypeInt( 'OPT' ) ) {
         // TODO:: calc rr size.
         $start_pos--;
       }
@@ -37,7 +37,6 @@ class DnsResolverBinStr extends DnsResolver {
   }
   
   protected static function parse_response( string $resposse_bin ) {
-    $offset = 0;
     // header
     /**
      * typedef struct __attribute__((packed))   {
@@ -50,7 +49,7 @@ class DnsResolverBinStr extends DnsResolver {
      * } dns_header_t;
      */
     $obj = new \stdClass();
-    $obj->queryid = BinDecode::read_uint16( $resposse_bin, $offset );
+    $obj->queryid = BinDecode::read_uint16( $resposse_bin, $offset = 0 );
     $obj->q_flags = BinDecode::read_uint16( $resposse_bin, $offset += 2 );
     $obj->qdcount = BinDecode::read_uint16( $resposse_bin, $offset += 2 );
     $obj->ancount = BinDecode::read_uint16( $resposse_bin, $offset += 2 );
@@ -58,7 +57,7 @@ class DnsResolverBinStr extends DnsResolver {
     $obj->arcount = BinDecode::read_uint16( $resposse_bin, $offset += 2 );
     $offset += 2;
     // skip qdata
-    $qname_end_pos = strpos( substr( $resposse_bin, $offset ), "\x00" ) + $offset;
+    $qname_end_pos = strpos( BinDecode::read_string( $resposse_bin, $offset ), "\x00" ) + $offset;
     // ANSWER SECTION
     $ans_start_pos = $qname_end_pos + 2 + 2 + 1;
     [$ans, $offset] = static::read_response_record( $resposse_bin, $obj->ancount, $ans_start_pos );
@@ -75,9 +74,7 @@ class DnsResolverBinStr extends DnsResolver {
   
   protected static function build_query( $name, $type ) {
     // 1. バッファ確保
-    $max_len = 150;
-    $buffer = str_repeat( "\x00", $max_len );
-    
+    $buffer = BinEncode::buffer( 150 );
     // 2. ヘッダー設定
     /**
      * typedef struct __attribute__((packed))   {
@@ -90,10 +87,10 @@ class DnsResolverBinStr extends DnsResolver {
      * } dns_header_t;
      */
     BinEncode::write_uint16( $buffer, 0, rand( 10000, 65535 ) );      // id
-    BinEncode::write_uint16( $buffer, 2, 0x0100 );                // flags RD=1
-    BinEncode::write_uint16( $buffer, 4, 0x01 );                  // qdcount
-    BinEncode::write_uint16( $buffer, 6, 0x00 );                  // nscount
-    BinEncode::write_uint16( $buffer, 8, 0x00 );                  // arcount
+    BinEncode::write_uint16( $buffer, 2, 0x0100 );                    // flags RD=1
+    BinEncode::write_uint16( $buffer, 4, 0x01 );                      // qdcount
+    BinEncode::write_uint16( $buffer, 6, 0x00 );                      // nscount
+    BinEncode::write_uint16( $buffer, 8, 0x00 );                      // arcount
     BinEncode::write_uint16( $buffer, 10, static::$EDNS_ENABLED );    // arcount
     //
     // 4. QUESTION SECTION.

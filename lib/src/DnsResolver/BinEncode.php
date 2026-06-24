@@ -30,4 +30,8 @@ class BinEncode {
   public static function write_chars( &$bin_string, $offset, string $chars ) {
     $bin_string = substr_replace( $bin_string, $chars, $offset, strlen( $chars ) );
   }
+  public static function buffer($buff_size=512) {
+    return str_repeat("\x00",$buff_size);
+  
+  }
 }

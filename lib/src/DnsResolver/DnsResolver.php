@@ -34,7 +34,7 @@ abstract class DnsResolver {
     |Z|flag(1bit)|	将来のために予約。常に0|
     |AD|flag(1bit)|	DNSSEC検証に成功したことを示す（応答）／ 応答のADビットを理解できることを示す（問い合わせ）,ほぼ常に0|
     |CD|flag(1bit)|	DNSSEC検証の禁止、ほぼ常に0|
-    |QDCOUNT|quert count int(16)|	Questionセクション数,ほぼ常に0|
+    |QDCOUNT|quert count int(16)|	Questionセクション数,ほぼ常に 0x01 |
     |ANCOUNT|answer count |	Answerセクションのリソースレコード（RR）数|
     |NSCOUNT|int(16)|	AuthorityセクションのRR数|
     |ARCOUNT|int(16)|	AdditionalセクションのRR数|
@@ -94,7 +94,7 @@ abstract class DnsResolver {
   protected static function decodeName( string $bin, $offset = 0 ): string {
     $parts = [];
     while ( BinDecode::read_uint8( $bin, $offset ) != 0 ) {
-      if( $bin[$offset] === "\xC0" ) {
+      if( BinDecode::read_uchar($bin,$offset) === "\xC0" ) {
         $ptr = BinDecode::read_uint16( $bin, $offset ) & 0x3fff;
         $parts[] = static::decodeName( $bin, $ptr );
         break;
@@ -173,7 +173,7 @@ abstract class DnsResolver {
     $soa_rr_bin = substr( $packet_bin, $pos, $rdlength );
     $offset = 0;
     while ( BinDecode::read_uint8( $soa_rr_bin, $offset ) != 0 ) {
-      if( $soa_rr_bin[$offset] == "\xC0" ) {
+      if( BinDecode::read_uchar($soa_rr_bin,$offset) == "\xC0" ) {
         $offset = $offset + 1;
         break;
       }
@@ -184,11 +184,11 @@ abstract class DnsResolver {
     return [
       'mname'   => static::decodeName( $packet_bin, $pos ),
       'rname'   => static::decodeName( $packet_bin, $pos + $offset + 1 ),
-      'serial'  => BinDecode::uint32( substr( $soa_rr_bin, $rdlength - 4*5, 4 ) ),
-      'refresh' => BinDecode::uint32( substr( $soa_rr_bin, $rdlength - 4*4, 4 ) ),
-      'retry'   => BinDecode::uint32( substr( $soa_rr_bin, $rdlength - 4*3, 4 ) ),
-      'expire'  => BinDecode::uint32( substr( $soa_rr_bin, $rdlength - 4*2, 4 ) ),
-      'min'     => BinDecode::uint32( substr( $soa_rr_bin, $rdlength - 4*1, 4 ) ),
+      'serial'  => BinDecode::read_uint32(Bindecode::read_string($soa_rr_bin,$rdlength - 4*5,4),),
+      'refresh' => BinDecode::read_uint32(Bindecode::read_string($soa_rr_bin,$rdlength - 4*4,4),),
+      'retry'   => BinDecode::read_uint32(Bindecode::read_string($soa_rr_bin,$rdlength - 4*3,4),),
+      'expire'  => BinDecode::read_uint32(Bindecode::read_string($soa_rr_bin,$rdlength - 4*2,4),),
+      'min'     => BinDecode::read_uint32(Bindecode::read_string($soa_rr_bin,$rdlength - 4*1,4),),
     ];
   }
   
@@ -205,11 +205,11 @@ abstract class DnsResolver {
      */
     $rr = [];
     $offset = $rr_pos;
-    if( substr( $packet_bin, $rr_pos, 1 ) == "\xc0" ) {
+    if( Bindecode::read_string( $packet_bin, $rr_pos, 1 ) == "\xc0" ) {
       $alias_pos = BinDecode::read_uint16( $packet_bin, $offset ) & 0x3fff;
       $rr['name'] = static::decodeName( $packet_bin, $alias_pos );
-      $offset = strpos( substr( $packet_bin, $offset ), "\x00" ) + $rr_pos;
-    } else if( substr( $packet_bin, $rr_pos, 1 ) == "\x00" ) {
+      $offset = strpos( Bindecode::read_string( $packet_bin, $offset ), "\x00" ) + $rr_pos;
+    } else if( BinDecode::read_uchar($packet_bin,$rr_pos) == "\x00" ) {
       $offset = $offset + 1;
       $rr['name'] = '';
     } else {
@@ -252,9 +252,6 @@ abstract class DnsResolver {
     foreach ( ['ANSWER', 'AUTHORITY', 'ADDITIONAL'] as $key ) {
       if(empty($ret[$key])) continue;
       foreach ( $ret[$key] as $idx => $record ) {
-        //if ($record['type'] === 41) {
-        //  $record['udp_query_max_payload_size'] = $record['class'];
-        //}
         $record['class'] = static::getQueryClass( $record['class'] );
         $record['type'] = static::getQueryType( $record['type'] );
         unset( $record['rdlength'] );
