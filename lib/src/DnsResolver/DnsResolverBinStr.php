@@ -2,6 +2,9 @@
 
 namespace Takuya\LEClientDNS01\DnsResolver;
 
+use Takuya\LEClientDNS01\DnsResolver\Binary\BinDecode;
+use Takuya\LEClientDNS01\DnsResolver\Binary\BinEncode;
+
 class DnsResolverBinStr extends DnsResolver {
   
   protected static function query( $name, $type, $ns_server, $timeout ) {
@@ -16,6 +19,7 @@ class DnsResolverBinStr extends DnsResolver {
     $start = microtime( true );
     $response = static::send_query( $binary_packet, $ns_server, $timeout );
     $elapsed = microtime( true ) - $start;
+    if( $response ===false ) throw new \RuntimeException( 'Dns Connection failed.' );
     if( $q['id'] != static::decodeQueryId( $response ) ) throw new \RuntimeException( 'packet id modified' );
     $ret = static::parse_response( $response );
     return array_merge( ['QUERY' => [$q], 'TIME' => $elapsed], $ret );

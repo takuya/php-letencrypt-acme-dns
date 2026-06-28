@@ -2,6 +2,8 @@
 
 namespace Takuya\LEClientDNS01\DnsResolver;
 
+use Takuya\LEClientDNS01\DnsResolver\Binary\BinDecode;
+
 abstract class DnsResolver {
   /*
   
@@ -66,7 +68,7 @@ abstract class DnsResolver {
     'default' => null,
   ];
   
-  public static function create( string $name = 'ffi' ): DnsResolver {
+  public static function create( string $name =null ): DnsResolver {
     if( $name == 'ffi' && extension_loaded( 'ffi' ) ) {
       return new DnsResolverFFI();
     } else {

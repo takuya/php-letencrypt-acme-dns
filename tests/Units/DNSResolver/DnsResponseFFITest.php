@@ -60,6 +60,15 @@ class DnsResponseFFITest extends TestCase {
     $response = hex2bin($sample_response_packet_binary);
     return $response;
   }
+  protected function expectedResponseParsedData() {
+    return   [
+      0=>["name" => "g.co","type" => 2, "class" => 1, "ttl" => 345600, "rdlength" => 16, "rdata" => "ns4.google.com",],
+      1=>["name" => "g.co","type" => 2, "class" => 1, "ttl" => 345600, "rdlength" => 6, "rdata" => "ns3.google.com",],
+      2=>["name" => "g.co","type" => 2, "class" => 1, "ttl" => 345600, "rdlength" => 6, "rdata" => "ns1.google.com",],
+      3=>["name" => "g.co","type" => 2, "class" => 1, "ttl" => 345600, "rdlength" => 6, "rdata" => "ns2.google.com",],
+    ];
+  
+  }
   public  function decodeName(string $bin, $offset=0){
     $parts = [];
     
@@ -68,10 +77,32 @@ class DnsResponseFFITest extends TestCase {
       $offset++;
       $parts[] = substr($bin, $offset,$len);
       $offset = $offset+$len;
+      // 圧縮を探す。
+      if ($bin[$offset]=="\xC0"){
+        $ptr = unpack('n', substr($bin, $offset, 2))[1] & 0x3fff;
+        $parts[]=$this->decodeName($bin,$ptr);
+        break;
+      }
+      
     }
     return implode( '.', $parts );
   }
-  public function decodeLabel(string $bin , int $offset=0) {
+  public function parseResponseRecord( $binary_string, $pos) {
+    $rr = ['name'=>null,'type'=>null];
+    if( substr($binary_string,$pos,1) == "\xc0"){
+      $alias = ord(substr($binary_string,$pos+1,1));
+      $rr['name'] = $this->decodeName($binary_string,$alias);
+    }
+    $rr['type'] = unpack('n', substr($binary_string, $pos+2, 2))[1];
+    //$pos += 2;
+    $rr['class'] = unpack('n', substr($binary_string, $pos+2+2, 2))[1];
+    //$pos += 2;
+    $rr['ttl'] = unpack('N', substr($binary_string, $pos+2+2+2, 4))[1];
+    //$pos += 4;
+    $rr['rdlength'] = unpack('n', substr($binary_string, $pos+2+2+2+4, 2))[1];
+    //
+    $rr['rdata'] = $this->decodeName($binary_string,$pos+2+2+2+4+2);
+    return $rr;
   
   }
   
@@ -84,116 +115,40 @@ class DnsResponseFFITest extends TestCase {
     
     $ancount = $ffi->htons( $response_ffi->ancount );
     $qdcount = $ffi->htons( $response_ffi->qdcount );
-    
-    $qname_start_pos = $qname_pos=FFI::sizeof($ffi->type( "dns_header_t" ));
-    
-    $addr = $ffi->cast('char *', FFI::addr( $response_ffi ));
-    
-    for ( $offset=$qname_start_pos; $offset<FFI::sizeof($ffi->type( "dns_packet_t" ));$offset++ ){
-      
-      dd(FFI::string( $addr, 10 ));
-      
-      
-      
+    for (
+      $ptr=$ffi->cast('char *', FFI::addr($response_ffi)), $i =FFI::sizeof($ffi->type( "dns_header_t" ));
+      $i<FFI::sizeof($ffi->type( "dns_packet_t" ));
+      $i++
+    ) {
+      if (FFI::string( $ptr[$i], 1 ) == "\x00" ){
+        $qname_end_pos = $i;
+        break;
+      }
     }
-    while ( unpack("C",$bin[$offset])[1] != 0 ) {
-      $len = unpack("C",$bin[$offset])[1];
-      $offset++;
-      $parts[] = substr($bin, $offset,$len);
-      $offset = $offset+$len;
-    }
+    $ans_start_pos = $qname_end_pos +1+ 2 + 2;
 
-
-    $ans_start_addr =
-      FFI::sizeof($ffi->type( "dns_header_t" ))
-      +strlen($qname)
-      +2
-    ;
-    
-    dd($ans_start_addr);
-
-    
-    //$addr = $addr + 12;
-    //$cnt = 0;
-    while(FFI::string($addr++,1)!=0){
-      dump(FFI::string($addr,1));
-      $cnt++;
-    }
-    //(self::hex_dump(FFI::string($addr,1)));
-    dd('end', $cnt);
-    //while ( $response_ffi->data[$offset] != 0 ) {
-    //  $offset += $response_ffi->data[$offset] + 1;
-    //}
     //
-    //
-    //
-
-    //dd( self::hex_dump( FFI::string( , 200 ) ) );
-    for ( $i = 0; $i < $ancount; $i++ ) {
-      //dd(self::hex_dump() ));
-      //$ip_offset = $offset + 12;
-      $rr = $ffi->cast(
-        'dns_rr_header_t*',
-        FFI::addr( $response_ffi->data[$offset] )
-      );
-      $rdlength = $ffi->htons( $rr->rdlength );
-      $rdata_pos = $offset + 12;
-      $rdata = $ffi->cast(
-        'uint8_t*',
-        FFI::addr( $response_ffi->data[$rdata_pos] )
-      );
-
-      dd($rdata_pos);
-      //ここだね
-      //$ret = $this->decodeName(FFI::string( FFI::addr( $response_ffi->data[$rdata_pos] ), $rdlength ),0);
-      
-      
-      $r_header_size = $ffi::sizeof( $response_ffi ) - $ffi::sizeof( $response_ffi->data );
-      dump($ffi->htons( $rr->name ));
-      $name_addr_val = $ffi->htons( $rr->name ) - $r_header_size;
-      dd( ( $name_addr_val & 0xC000 ) === 0xC000 );
-      
-      //if( ( $name_addr_val & 0xC000 ) === 0xC000 ) {
-      //  $ptr = $name_addr_val & 0x3FFF;
-      //
-      //  $name = $this->decodeName(
-      //    FFI::string(FFI::addr($response_ffi),FFI::sizeof($response_ffi)),
-      //    $ptr+FFI::sizeof($ffi->type('dns_header_t'))
-      //  );
-      //}
-      dump( [
-        $name,
-        match ( $ffi->htons( $rr->type ) ) {
-          1 => "A",            // IPv4
-          2 => "NS",           // ネームサーバ
-          5 => "CNAME",        // 別名
-          6 => "SOA",          // Zone情報
-          12 => "PTR",         // 逆引き
-          15 => "MX",          // メールサーバ
-          16 => "TXT",         // テキスト
-          28 => "AAAA",        // IPv6
-          33 => "SRV",         // サービス
-          257 => "CAA",        // 証明書発行制御
-        },
-        match ( $ffi->htons( $rr->class ) ) {
-          1 => "IN",
-          3 => "CHAOS",
-          4 => "HS",
-          default => 'ANY'
-        },
-        match ($ffi->htons( $rr->type )) {
-          1  => inet_ntop($rdata),              // A
-          28 => inet_ntop($rdata),              // AAAA
-          16 => $rdata,                   // TXT
-          2  => $rdata,         // NS
-          5  => $rdata,         // CNAME
-          default => bin2hex($rdata),
-        },
-      ] );
-      
-      $offset = $offset + 12 + $rdlength;
+    $packet_addr = $ffi->cast( 'uint8_t *',FFI::addr($response_ffi) );
+    
+    
+    $answer_pos =[];
+    for ( $offset=$ans_start_pos, $i=0;$i<$ancount;$i++){
+      $answer_pos[]=$offset;
+      $a = $ffi->cast("dns_rr_header_t *", FFI::addr($packet_addr[$offset]));
+      $rdlength=$ffi->htons($a->rdlength);
+      $offset += 12 + $rdlength;
     }
-
+    //dd($answer_pos);
+    // ここからが本番。
+    
+    $bin = FFI::string(FFI::addr( $response_ffi ),FFI::sizeof($ffi->type('dns_packet_t')));
+    $ans = [];
+    foreach ($answer_pos as $pos){
+      $ans[]=$this->parseResponseRecord($bin,$pos);
+    }
+    
+    $this->assertSame($this->expectedResponseParsedData(), $ans);
+    
     
   }
 }
