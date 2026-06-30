@@ -1,6 +1,6 @@
 {
   "name": "takuya/php-letencrypt-acme-dns",
-  "description": "acme v2 to Let'sEncrypt by dns cloudflare or your own.",
+  "description": "Acme v2 to Let's Encrypt using dns-01 cloudflare or your own.",
   "type": "library",
   "license": "GPL-3.0-or-later",
   "keywords": [
@@ -8,7 +8,9 @@
     "pure-php",
     "acme-dns",
     "acme-v2",
-    "cloudflare"
+    "cloudflare",
+    "issue-cert",
+    "dns-resolver"
   ],
   "autoload": {
     "psr-4": {
@@ -35,8 +37,7 @@
   "minimum-stability": "stable",
   "require": {
     "cloudflare/sdk": "^1.3",
-    "ext-openssl": "*",
-    "pear/net_dns2": "^1.5"
+    "ext-openssl": "*"
   },
   "require-dev": {
     "phpunit/phpunit": "*",
