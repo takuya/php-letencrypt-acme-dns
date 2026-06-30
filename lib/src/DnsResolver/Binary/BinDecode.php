@@ -54,8 +54,8 @@ class BinDecode {
     $len = $len == -1 ? strlen( $binary_string ) : $len;
     $len = $len > strlen( $binary_string ) ? strlen( $binary_string ) : $len;
     $end = $offset + $len - 1;
-    $end = $end > strlen( $binary_string )-1 ? strlen( $binary_string )-1 : $end;
-    $line_str='';
+    $end = $end > strlen( $binary_string ) - 1 ? strlen( $binary_string ) - 1 : $end;
+    $line_str = '';
     foreach ( str_split( $binary_string ) as $idx => $c ) {
       //
       $lineno = intval( $idx/$col_size );
@@ -68,9 +68,9 @@ class BinDecode {
       }
       //
       $str .= $idx >= $offset ? sprintf( "%02x ", ord( $c ) ) : "   ";
-      $line_str .=$idx >= $offset? $c:' ';
+      $line_str .= $idx >= $offset ? $c : ' ';
       //
-      [$at_eol,$at_eos] =[ $idx%$col_size == $col_size - 1, $idx == $end];
+      [$at_eol, $at_eos] = [$idx%$col_size == $col_size - 1, $idx == $end];
       //dump(compact('at_eol','at_eos','idx'));
       if( $at_eol || $at_eos ) {
         $str .= $at_eos ? str_repeat( "   ", $col_size - $idx%$col_size - 1 ) : "";

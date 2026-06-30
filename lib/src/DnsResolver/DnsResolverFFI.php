@@ -55,35 +55,35 @@ class DnsResolverFFI extends DnsResolver {
   protected static function ffi_query( string $name, string $type, string $ns_server, int $timeout = 5 ) {
     $ffi = static::dns_ffi_def();
     [$ffi, $binary_packet] = static::build_query( $ffi, $name, $type );
-    $q=[
-      'id'=> static::decodeQueryId($binary_packet),
-      'name'=>$name,
-      'type'=> static::getQueryType(static::getTypeInt($type)),
-      'server'=>$ns_server
+    $q = [
+      'id'     => static::decodeQueryId( $binary_packet ),
+      'name'   => $name,
+      'type'   => static::getQueryType( static::getTypeInt( $type ) ),
+      'server' => $ns_server,
     ];
     //
-    $start = microtime(true);
+    $start = microtime( true );
     $response = static::send_query( $binary_packet, $ns_server, $timeout );
-    $elapsed = microtime(true) - $start;
-    if ( $q['id'] != static::decodeQueryId($response)) throw new \RuntimeException('packet id modfied');
+    $elapsed = microtime( true ) - $start;
+    if( $q['id'] != static::decodeQueryId( $response ) ) throw new \RuntimeException( 'packet id modfied' );
     //
     $ret = static::parse_response( $ffi, $response );
-    return ['QUERY'=>[$q],'ANSWER'=>$ret,'TIME'=>$elapsed];
+    return ['QUERY' => [$q], 'ANSWER' => $ret, 'TIME' => $elapsed];
   }
   
   
   protected static function parse_response( $ffi, $response ) {
-    $res_chars_ffi = $ffi->new("char[".(strlen($response)+1)."]");
-    FFI::memcpy($res_chars_ffi, $response, strlen($response));
+    $res_chars_ffi = $ffi->new( "char[".( strlen( $response ) + 1 )."]" );
+    FFI::memcpy( $res_chars_ffi, $response, strlen( $response ) );
     
     $res_header_ffi = $ffi->new( "dns_header_t" );
-    FFI::memcpy( FFI::addr( $res_header_ffi ), $res_chars_ffi, FFI::sizeof($ffi->type('dns_header_t')) );
+    FFI::memcpy( FFI::addr( $res_header_ffi ), $res_chars_ffi, FFI::sizeof( $ffi->type( 'dns_header_t' ) ) );
     $ancount = $ffi->htons( $res_header_ffi->ancount );
     
     //
     for (
-      $ptr = $ffi->cast( 'char *',  $res_chars_ffi ), $i = FFI::sizeof( $ffi->type( "dns_header_t" ) );
-      $i < strlen($response);
+      $ptr = $ffi->cast( 'char *', $res_chars_ffi ), $i = FFI::sizeof( $ffi->type( "dns_header_t" ) );
+      $i < strlen( $response );
       $i++
     ) {
       if( FFI::string( $ptr[$i], 1 ) == "\x00" ) {
@@ -128,7 +128,7 @@ class DnsResolverFFI extends DnsResolver {
     $packet->qdcount = $ffi->htons( 1 );
     $packet->ancount = 0;
     $packet->nscount = 0;
-    $packet->arcount =  $ffi->htons(static::$E_DNS['enabled']);
+    $packet->arcount = $ffi->htons( static::$E_DNS['enabled'] );
     //dump($id);
     
     // 3. Questionセクション構築
@@ -151,20 +151,19 @@ class DnsResolverFFI extends DnsResolver {
     $ptr[2] = 0;
     $ptr[3] = 1;// IN class: 固定
     // EDNS0
-    if (static::$E_DNS){
+    if( static::$E_DNS ) {
       $ptr += 4;
-      $opt = $ffi->new("dns_opt_rr_t");
+      $opt = $ffi->new( "dns_opt_rr_t" );
       $opt->name = 0;
-      $opt->type = $ffi->htons(41);
-      $opt->udp_size = $ffi->htons(1232);
+      $opt->type = $ffi->htons( 41 );
+      $opt->udp_size = $ffi->htons( 1232 );
       $opt->ttl = 0;
       $opt->rdlength = 0;
       FFI::memcpy(
-        FFI::addr($ptr[0]),
-        FFI::addr($opt),
-        FFI::sizeof($opt)
+        FFI::addr( $ptr[0] ),
+        FFI::addr( $opt ),
+        FFI::sizeof( $opt )
       );
-      
     }
     
     
@@ -172,7 +171,7 @@ class DnsResolverFFI extends DnsResolver {
     return [$ffi, FFI::string( $packet, FFI::sizeof( $packet ) )];
   }
   
-
+  
   protected static function query( $name, $type, $ns_ip, $timeout ) {
     return static::ffi_query( $name, $type, $ns_ip, $timeout );
   }

@@ -68,7 +68,7 @@ abstract class DnsResolver {
     'default' => null,
   ];
   
-  public static function create( string $name =null ): DnsResolver {
+  public static function create( string $name = null ): DnsResolver {
     if( $name == 'ffi' && extension_loaded( 'ffi' ) ) {
       return new DnsResolverFFI();
     } else {
@@ -96,7 +96,7 @@ abstract class DnsResolver {
   protected static function decodeName( string $bin, $offset = 0 ): string {
     $parts = [];
     while ( BinDecode::read_uint8( $bin, $offset ) != 0 ) {
-      if( BinDecode::read_uchar($bin,$offset) === "\xC0" ) {
+      if( BinDecode::read_uchar( $bin, $offset ) === "\xC0" ) {
         $ptr = BinDecode::read_uint16( $bin, $offset ) & 0x3fff;
         $parts[] = static::decodeName( $bin, $ptr );
         break;
@@ -140,7 +140,7 @@ abstract class DnsResolver {
     $soa_rr_bin = substr( $packet_bin, $pos, $rdlength );
     $offset = 0;
     while ( BinDecode::read_uint8( $soa_rr_bin, $offset ) != 0 ) {
-      if( BinDecode::read_uchar($soa_rr_bin,$offset) == "\xC0" ) {
+      if( BinDecode::read_uchar( $soa_rr_bin, $offset ) == "\xC0" ) {
         $offset = $offset + 1;
         break;
       }
@@ -151,15 +151,15 @@ abstract class DnsResolver {
     return [
       'mname'   => static::decodeName( $packet_bin, $pos ),
       'rname'   => static::decodeName( $packet_bin, $pos + $offset + 1 ),
-      'serial'  => BinDecode::read_uint32(Bindecode::read_string($soa_rr_bin,$rdlength - 4*5,4),),
-      'refresh' => BinDecode::read_uint32(Bindecode::read_string($soa_rr_bin,$rdlength - 4*4,4),),
-      'retry'   => BinDecode::read_uint32(Bindecode::read_string($soa_rr_bin,$rdlength - 4*3,4),),
-      'expire'  => BinDecode::read_uint32(Bindecode::read_string($soa_rr_bin,$rdlength - 4*2,4),),
-      'min'     => BinDecode::read_uint32(Bindecode::read_string($soa_rr_bin,$rdlength - 4*1,4),),
+      'serial'  => BinDecode::read_uint32( Bindecode::read_string( $soa_rr_bin, $rdlength - 4*5, 4 ) ),
+      'refresh' => BinDecode::read_uint32( Bindecode::read_string( $soa_rr_bin, $rdlength - 4*4, 4 ) ),
+      'retry'   => BinDecode::read_uint32( Bindecode::read_string( $soa_rr_bin, $rdlength - 4*3, 4 ) ),
+      'expire'  => BinDecode::read_uint32( Bindecode::read_string( $soa_rr_bin, $rdlength - 4*2, 4 ) ),
+      'min'     => BinDecode::read_uint32( Bindecode::read_string( $soa_rr_bin, $rdlength - 4*1, 4 ) ),
     ];
   }
   
-  protected static function parseResponseRecord( string $packet_bin, int $rr_pos, int $sect=0 ): array {
+  protected static function parseResponseRecord( string $packet_bin, int $rr_pos, int $sect = 0 ): array {
     /**
      * // レスポンス・レコード・データ・ヘッダ
      * typedef struct  __attribute__((packed)) {
@@ -176,7 +176,7 @@ abstract class DnsResolver {
       $alias_pos = BinDecode::read_uint16( $packet_bin, $offset ) & 0x3fff;
       $rr['name'] = static::decodeName( $packet_bin, $alias_pos );
       $offset = strpos( Bindecode::read_string( $packet_bin, $offset ), "\x00" ) + $rr_pos;
-    } else if( BinDecode::read_uchar($packet_bin,$rr_pos) == "\x00" ) {
+    } else if( BinDecode::read_uchar( $packet_bin, $rr_pos ) == "\x00" ) {
       $offset = $offset + 1;
       $rr['name'] = '.';
     } else {
@@ -200,8 +200,8 @@ abstract class DnsResolver {
       //static::getTypeInt( "SRV" )   => static::decodeName( $binary_string, $pos + 2 + 2 + 2 + 4 + 2 ),//TODO
       default                       => bin2hex( substr( $packet_bin, $offset + 2 + 2 + 4 + 2, $rr['rdlength'] ) ),
     };
-    $next = $offset+2+2+2+4+$rr['rdlength'];
-    return [$next,$rr];
+    $next = $offset + 2 + 2 + 2 + 4 + $rr['rdlength'];
+    return [$next, $rr];
   }
   
   protected static function send_query( string $binary_packet, string $ns_host, int $timeout ) {
@@ -218,7 +218,7 @@ abstract class DnsResolver {
   public function resolve( string $name, string $type, string $ns_server, int $timeout = 5 ) {
     $ret = static::query( $name, $type, $ns_server, $timeout );
     foreach ( ['ANSWER', 'AUTHORITY', 'ADDITIONAL'] as $key ) {
-      if(empty($ret[$key])) continue;
+      if( empty( $ret[$key] ) ) continue;
       foreach ( $ret[$key] as $idx => $record ) {
         $record['class'] = static::getQueryClass( $record['class'] );
         $record['type'] = static::getQueryType( $record['type'] );
