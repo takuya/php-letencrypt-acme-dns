@@ -66,4 +66,31 @@ class DnsResolverTest extends TestCase {
     $this->expectException(\RuntimeException::class);
     $resolver->resolve('www.google.com','a',$not_dns_server);
   }
+  public function test_resolve_query_dot_root_server() {
+    $resolver = DnsResolver::create();
+    $ret = $resolver->resolve('.','ns','1.1.1.1');
+    $this->assertStringContainsString('root-servers.net', $ret['ANSWER'][0]['rdata']);
+    $this->assertStringContainsString('root-servers.net', $ret['ANSWER'][1]['rdata']);
+  }
+  public function test_fqdn_trailing_dot_resolution() {
+    $resolver = DnsResolver::create();
+    $ret_1 = $resolver->resolve('co','ns','a.root-servers.net');
+    $ret_2 = $resolver->resolve('co.','ns','a.root-servers.net');
+    //
+    usort($ret_1['AUTHORITY'],fn($a,$b)=> $a['rdata']<=>$b['rdata'] );
+    usort($ret_2['AUTHORITY'],fn($a,$b)=> $a['rdata']<=>$b['rdata'] );
+    $this->assertEquals($ret_1['AUTHORITY'][0]['rdata'], $ret_2['AUTHORITY'][0]['rdata']);
+  }
+  public function test_resolve_dot_to_root_server() {
+    $resolver = DnsResolver::create();
+    $ret_1 = $resolver->resolve('.','ns',"a.root-servers.net");
+    $ret_2 = $resolver->resolve('.','ns',dns_get_record("a.root-servers.net",DNS_A)[0]['ip']);
+    usort($ret_1['ADDITIONAL'],fn($a,$b)=> $a['rdata']<=>$b['rdata'] );
+    usort($ret_2['ADDITIONAL'],fn($a,$b)=> $a['rdata']<=>$b['rdata'] );
+    $this->assertEquals($ret_1['ADDITIONAL'][0]['rdata'], $ret_2['ADDITIONAL'][0]['rdata']);
+    usort($ret_1['ANSWER'],fn($a,$b)=> $a['rdata']<=>$b['rdata'] );
+    usort($ret_2['ANSWER'],fn($a,$b)=> $a['rdata']<=>$b['rdata'] );
+    $this->assertEquals($ret_1['ANSWER'][0]['rdata'], $ret_2['ANSWER'][0]['rdata']);
+
+  }
 }

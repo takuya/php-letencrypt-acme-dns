@@ -132,43 +132,8 @@ abstract class DnsResolver {
     return $txt;
   }
   
-  protected static function hex_dump( $data, $return = true, $newline = "\n", int $width = 12,
-                                      string $pad = '.' ): ?string {
-    static $from = '';
-    static $to = '';
-    
-    //static $width = 16; # number of bytes per line
-    //static $pad = '.'; # padding for non-visible characters
-    
-    if( $from === '' ) {
-      for ( $i = 0; $i <= 0xFF; $i++ ) {
-        $from .= chr( $i );
-        $to .= ( $i >= 0x20 && $i <= 0x7E ) ? chr( $i ) : $pad;
-      }
-    }
-    
-    $hex = str_split( bin2hex( $data ), $width*2 );
-    $chars = str_split( strtr( $data, $from, $to ), $width );
-    
-    $offset = 0;
-    $str = '';
-    foreach ( $hex as $i => $line ) {
-      $str .= sprintf( '%06X', $offset )
-        .' : '.implode( ' ', str_split( $line, 2 ) )
-        .( strlen( $line ) == 32 ? '' : str_repeat( ' ', 32 + 15 - ( strlen( $line ) + ( strlen( $line )/2 - 1 ) ) ) )
-        .' ['.sprintf( "%-16s", $chars[$i] ).']'.$newline;
-      $offset += $width;
-    }
-    $return == false && print( $str );
-    return $return ? $str : null;
-  }
-  
   protected static function decodeMx( $bin, $pos ): string {
     return static::decodeName( $bin, $pos + 2 );
-  }
-  
-  protected static function hexdump_packet( string $bin, int $offset, int $len = null ) {
-    dd( self::hex_dump( substr( $bin, $offset, $len ?? strlen( $bin ) ) ) );
   }
   
   protected static function decodeSoa( string $packet_bin, int $pos, int $rdlength ): array {
@@ -194,7 +159,7 @@ abstract class DnsResolver {
     ];
   }
   
-  protected static function parseResponseRecord( string $packet_bin, int $rr_pos ): array {
+  protected static function parseResponseRecord( string $packet_bin, int $rr_pos, int $sect=0 ): array {
     /**
      * // レスポンス・レコード・データ・ヘッダ
      * typedef struct  __attribute__((packed)) {
@@ -213,7 +178,7 @@ abstract class DnsResolver {
       $offset = strpos( Bindecode::read_string( $packet_bin, $offset ), "\x00" ) + $rr_pos;
     } else if( BinDecode::read_uchar($packet_bin,$rr_pos) == "\x00" ) {
       $offset = $offset + 1;
-      $rr['name'] = '';
+      $rr['name'] = '.';
     } else {
       $rr['name'] = static::decodeName( $packet_bin, $offset );
     }
@@ -235,11 +200,12 @@ abstract class DnsResolver {
       //static::getTypeInt( "SRV" )   => static::decodeName( $binary_string, $pos + 2 + 2 + 2 + 4 + 2 ),//TODO
       default                       => bin2hex( substr( $packet_bin, $offset + 2 + 2 + 4 + 2, $rr['rdlength'] ) ),
     };
-    return $rr;
+    $next = $offset+2+2+2+4+$rr['rdlength'];
+    return [$next,$rr];
   }
   
-  protected static function send_query( string $binary_packet, string $ns_ip, int $timeout ) {
-    $fp = @stream_socket_client( "udp://{$ns_ip}:53", $errno, $errstr, $timeout );
+  protected static function send_query( string $binary_packet, string $ns_host, int $timeout ) {
+    $fp = @stream_socket_client( "udp://{$ns_host}:53", $errno, $errstr, $timeout );
     // TODO::E_NS_SOCKET_FAILED の処理
     if( !$fp ) throw new \RuntimeException( "Socket Failed", 1 ); // E_NS_SOCKET_FAILED 代替
     stream_set_timeout( $fp, $timeout );
@@ -249,8 +215,8 @@ abstract class DnsResolver {
     return $response;
   }
   
-  public function resolve( string $name, string $type, string $ns_ip, int $timeout = 5 ) {
-    $ret = static::query( $name, $type, $ns_ip, $timeout );
+  public function resolve( string $name, string $type, string $ns_server, int $timeout = 5 ) {
+    $ret = static::query( $name, $type, $ns_server, $timeout );
     foreach ( ['ANSWER', 'AUTHORITY', 'ADDITIONAL'] as $key ) {
       if(empty($ret[$key])) continue;
       foreach ( $ret[$key] as $idx => $record ) {

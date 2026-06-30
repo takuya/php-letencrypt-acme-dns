@@ -27,7 +27,7 @@ class DNSResolveTest extends TestCase {
   }
 
   public function test_resolve_dns_NS(){
-    $ret = dns_resolve('.', 'ns');
+    $ret = dns_resolve('.', 'ns', 'a.root-servers.net');
     $this->assertNotEmpty($ret);
     $this->assertIsString($ret);
     $this->assertStringContainsString('root-servers.net',$ret);
@@ -58,7 +58,6 @@ class DNSResolveTest extends TestCase {
   public function test_resolve_dns_MX(){
     $ret = dns_resolve('gmail.com', 'mx');
     $this->assertNotEmpty($ret);
-    $this->assertStringContainsString('google.com',$ret);
-  }
+    $this->assertStringContainsString('google.com',$ret);}
   
 }

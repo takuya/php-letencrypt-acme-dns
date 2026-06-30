@@ -8,17 +8,19 @@ This is **Pure-PHP** , intend to be LE embedded WEB-PHP-App (ex. laravel).
 
 **Independent** from `shell command` like `certbot`.   
 
-### Run ACME. 
-request issue of certificate by DNS-01.
+### Run ACME DNS-01 . 
 
-shell
-```php
+This can request issue certificate by ACME DNS-01.
+
+usage from shell.
+```shell
+## cd 
 export LE_CLOUDFLARE_TOKEN='X-811Gxxxxx'
 export LE_EMAIL='yourname@example.tld'
 php bin/request-issue.php 'aab.example.tld' 'aaa.example.tld'
 ```
 
-### EXAMPLE
+### EXAMPLE Usage.
 In you php code.
 
 ```php
@@ -74,15 +76,18 @@ $cli->setDomainNames( ['www.first.tld','www.second.tld'] );
 ```
 
 
-### Feature: Two domain in Two DNS server into One Certificate SAN
-If you uses two dns server , you can set dns per domain.
+### Feature: Two domain, Two DNS server into One Cert:
+
+We can use of LE's SAN, different domains into one Cert.
+
+If you must use 2 dns server , you can set dns per domain.
 
 For example , Cert with two domain in SAN.
 
-| cert | domain                                   |
-|---|------------------------------------------|
-|commonName| example.tld                              | 
-|subjectAltName| DNS:example.**tld**, DNS:example.**biz** |
+| cert                | domain                                   |
+|---------------------|------------------------------------------|
+| commonName(CN)      | example.tld                              | 
+| subjectAltName(SAN) | DNS:example.**tld**, DNS:example.**biz** |
 
 DNS-01 plugins for above.
 
@@ -155,7 +160,7 @@ Fiber used. To use Fiber php8.1 required. Fiber used in waiting dns update.
 To Check DNS TXT recoed updated.
 - This package requires `Outbound UDP/53 are open`.
 
-## development 
+## Development 
 ```shell 
 git clone git@github.com:takuya/php-letencrypt-acme-dns.git
 cd php-letencrypt-acme-dns
@@ -175,7 +180,9 @@ vendor/bin/phpunit --filter CloudflarePluginTest
 
 ## Future Plan
 
-I will remove `acme/php` dependency in the future.
+- [x] I will remove `acme/php` dependency in the future. ← removed. 2026-06-01
+- [x] I will remove `pear/net_dns2` dependency in the future. ← done. 2026-06-30
+
 
 
 
