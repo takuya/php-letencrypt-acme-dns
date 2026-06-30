@@ -39,7 +39,7 @@ class AcmeIssueCertificateTest extends AcmeTestCase {
     $dns = new CloudflareDNSPlugin( $this->cf_api_token, $this->base_domain );
     $dns->enable_authoritative_check = true;
     $dns->addDnsTxtRecord( $challenge_name, $dnsValue );
-    $dns->waitForUpdated( $challenge_name, 'TXT', $dnsValue );// blocking
+    $dns->waitTxtUpdated( $challenge_name, $dnsValue );// blocking
     // save for remove
     $this->acme_challenge_name = $challenge_name;
     $this->acme_challenge_value = $dnsValue;
