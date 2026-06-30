@@ -161,7 +161,7 @@ $thumbprint = base64_url_encode(hash('sha256', json_encode($jwt), true));
 $keyAuthorization = $challenge->token . '.' . $thumbprint;
 $dnsValue = base64_url_encode(hash('sha256', $keyAuthorization, true));
 $dns->addDnsTxtRecord('_acme-challenge.'.$sub_domain,$dnsValue);
-$dns->waitForUpdated('_acme-challenge.'.$sub_domain,'TXT',$dnsValue, fn()=>dump('waiting..'));
+$dns->waitTxtUpdated('_acme-challenge.'.$sub_domain,$dnsValue, fn()=>dump('waiting..'));
 
 
 //

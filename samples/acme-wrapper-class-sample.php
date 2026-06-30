@@ -19,6 +19,7 @@ use Takuya\LEClientDNS01\PKey\CertificateWithPrivateKey;
 use Takuya\LEClientDNS01\DNSChallengeTask;
 use Takuya\LEClientDNS01\Delegators\AcmeDvWrapperStatus;
 use Takuya\LEClientDNS01\Account;
+use Takuya\LEClientDNS01\Delegators\AcmeDvWrapper;
 
 
 const STAGING = 'https://acme-staging-v02.api.letsencrypt.org/directory';
@@ -57,19 +58,19 @@ $sub_domain = sprintf("guzzle-sample-%s.%s",RandomString::gen(5,RandomString::LO
 
 //$key = new AsymmetricKey(file_get_contents('sample.pkey'));
 $key = new AsymmetricKey();
-$cli = new AcmeDvWrapperStatus(STAGING);
+$cli = new AcmeDvWrapper(STAGING);
 //// [ACME Step 2] Initial Nonce取得: 署名に必要な使い捨てトークンを取得
 $account = Account::create("admin@{$sub_domain}");
 $cli->newAccount($account);
 $cli->newOrder([$sub_domain]);
-$challenges = $cli->getDnsChallenges();
+$challenges = $cli->getDnsValues();
 $dns = new CloudflareDNSPlugin( $cf_api_token, $base_domain );
 $dns->enable_authoritative_check = true;
 foreach ( $challenges as $challenge ) {
-  $v = ['_acme-challenge.'.$challenge->getDomainName(),$challenge->getDnsValue()];
+  $v = ['_acme-challenge.'.$challenge->getChallengeDomainName(),$challenge->getDnsValue()];
   $dns->addDnsTxtRecord(...$v);
-  $dns->waitForUpdated($v[0],'TXT',$v[1], fn()=>dump('waiting..'));
-  $cli->challengeAuthorization($challenge->getDomainName());
+  $dns->waitTxtUpdated($v[0],$v[1], fn()=>dump('waiting..'));
+  $cli->challengeAuthorization($challenge->getChallengeDomainName());
 }
 ////
 //
