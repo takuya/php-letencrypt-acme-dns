@@ -51,6 +51,7 @@ if ( !function_exists( __NAMESPACE__.'\domain_ns' ) ) {
       }
     }
     $result = array_map( fn( $e ) => $e['target'], $result );
+    sort($result);
     return $result[rand( 0, sizeof( $result ) - 1 )];
   }
 }
