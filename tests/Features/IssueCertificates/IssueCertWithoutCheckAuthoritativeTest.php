@@ -38,7 +38,7 @@ class IssueCertWithoutCheckAuthoritativeTest extends IssueSingleDomainCertificat
       $time_elapsed=$elapsed;
     } );
     // assertion
-    $this->assertGreaterThan($dns->time_try_resolve_after_elapsed , $time_elapsed);
+    $this->assertGreaterThan($dns->time_try_resolve_after_update , $time_elapsed);
     $this->assertLessThan($dns->time_max_wait , $time_elapsed);
     $this->assertIsCert( $new_cert->cert() );
     $this->assertLECertificateIssued( $new_cert->cert(), $this->domain_names );

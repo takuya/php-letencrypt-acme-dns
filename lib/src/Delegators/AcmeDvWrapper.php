@@ -58,14 +58,14 @@ class AcmeDvWrapper {
     $this->updateState(AcmeDvWrapperStatus::ORDERED);
   }
   /**
-   * @return AcmeDNSChallenge[]
+   * @return AcmeDNSChallengeValue[]
    */
-  public function getDnsChallenges():array {
-    $challenges = [];
+  public function getDnsValues():array {
+    $domain_txt_values = [];
     foreach ( $this->order->getDomainNames() as $orderDomain ) {
-      $challenges[$orderDomain] = $this->order->getDnsChallenge($orderDomain);
+      $domain_txt_values[$orderDomain] = $this->order->getDnsChallengeValue($orderDomain);
     }
-    return $challenges;
+    return $domain_txt_values;
   }
   public function challengeAuthorization(string $domain_name):void {
     $this->acme_cli->challengeAuthorization($this->order->getAcmeOrder(), $domain_name);

@@ -26,7 +26,7 @@ class CloudflarePluginTest extends CertTestCase {
     $cf->addDnsTxtRecord($name,$content);
     //
     if ($cf->canResolveDirectly()){
-      $cf->waitForUpdated($name,'txt',$content);
+      $cf->waitTxtUpdated($name,$content);
       $this->assertEquals($content,$cf->query($name,'txt'));
     }
     // remove.

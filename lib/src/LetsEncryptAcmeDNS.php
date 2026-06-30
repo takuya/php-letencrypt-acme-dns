@@ -6,7 +6,7 @@ use Takuya\LEClientDNS01\PKey\AsymmetricKey;
 use Takuya\LEClientDNS01\Plugin\DNS\DNSPlugin;
 use Takuya\LEClientDNS01\Delegators\AcmeDvWrapper;
 use Takuya\LEClientDNS01\Delegators\AcmeDvWrapperStatus;
-use Takuya\LEClientDNS01\Delegators\AcmeDNSChallenge;
+use Takuya\LEClientDNS01\Delegators\AcmeDNSChallengeValue;
 use Takuya\LEClientDNS01\PKey\CertificateWithPrivateKey;
 use function Takuya\Utils\base_domain;
 use function Takuya\Utils\parent_domain;
@@ -27,7 +27,7 @@ class LetsEncryptAcmeDNS {
     $this->setAcmeURL();
   }
   
-  public function setAcmeURL( $acme_uri = LetsEncryptACMEServer::STAGING ) {
+  public function setAcmeURL( $acme_uri = LetsEncryptACMEServer::STAGING ): void {
     $this->acme_uri = $acme_uri;
   }
   
@@ -38,7 +38,7 @@ class LetsEncryptAcmeDNS {
     return $this->owner;
   }
   
-  public function setDnsPlugin( DnsPlugin $dns, string $target_domain_name = 'default' ) {
+  public function setDnsPlugin( DnsPlugin $dns, string $target_domain_name = 'default' ): void {
     $this->plugins[$target_domain_name] = $dns;
   }
   
@@ -96,11 +96,9 @@ class LetsEncryptAcmeDNS {
     $cli = new AcmeDvWrapper($this->acme_uri);
     $cli->newAccount($this->owner);
     $cli->newOrder($this->domain_names);
-    $challenges = $cli->getDnsChallenges();
-    // dns task
-    $tasks = $this->createChallengeTasks($challenges);// ここ複数形になるんだっけ？　複数形より複数形のタスクを定義したほうが・・・
-    // ここ DNS タスクで切り離さないと、 try-catch でもとに戻せない??
-    $this->processDNSTask($tasks, $cli,  $on_dns_wait ?? $this->default_on_wait_callback());
+    $dns_records = $cli->getDnsValues();
+    $dns_tasks = $this->createChallengeTasks($dns_records);
+    $this->processDNSTask($dns_tasks, $cli,  $on_dns_wait ?? $this->default_on_wait_callback());
     $cli->finalizeOrderCertificate(
       $cli->createCSRSubject($this->domain_names)->opensslCsr(
         $domain_pkey->privKey(\OpenSSLAsymmetricKey::class)));

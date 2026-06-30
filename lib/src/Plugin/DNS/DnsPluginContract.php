@@ -7,5 +7,5 @@ interface DnsPluginContract {
   
   public function removeTxtRecord ( $domain, $content ): bool;
   
-  public function waitForUpdated ( $name, $type, $content, callable $on_wait = null );
+  public function waitTxtUpdated ( $name, $content, callable $on_wait = null );
 }

@@ -18,15 +18,18 @@ trait DNSRecordUpdateWaiting {
   /**
    * @var int elapsed after api updated. wait for propagation for api update to dns resolved.
    */
-  public int $time_try_resolve_after_elapsed = 30;
+  public int $time_try_resolve_after_update = 30;
+  public function waitTxtUpdated( $name, $content, callable $on_wait = null ): void {
+    $this->waitForUpdated($name, 'TXT', $content, $on_wait);
+  }
   
-  public function waitForUpdated( $name, $type, $content, callable $on_wait = null ): void {
+  protected function waitForUpdated( $name, $type, $content, callable $on_wait = null ): void {
     if( $this->isDNSAuthoritativeCheckEnabled() && $this->canResolveDirectly() ) {
       $this->waitAuthoritativeNameServerUpdated( $name, strtoupper( $type ), $content, $on_wait ?? function() { } );
     } else {
       // wait 10 seconds, it might be enough for Cloudflare SOA primary NS and LE ACME Resolver.
       $this->waitResolverQueryDnsTxtUpdated( $name, $type, $content, $on_wait,
-        $this->time_max_wait, $this->time_on_each_sleep, $this->time_try_resolve_after_elapsed );
+        $this->time_max_wait, $this->time_on_each_sleep, $this->time_try_resolve_after_update );
     }
   }
   
@@ -34,7 +37,7 @@ trait DNSRecordUpdateWaiting {
     return $this->enable_authoritative_check;
   }
   
-  protected function waitResolverQueryDnsTxtUpdated( $name, $type, $content_expected, callable $on_wait, int $max_wait,
+  protected function waitResolverQueryDnsTxtUpdated( $name, $type, $content_expected, ?callable $on_wait, int $max_wait,
                                                      int $sleep_interval, int $try_resolve_after_sleep ): void {
     $start_at = time();
     do {
@@ -44,6 +47,7 @@ trait DNSRecordUpdateWaiting {
       if( $start_at + $try_resolve_after_sleep < time() ) {
         $dns_record = dns_get_record( $name, DNS_TXT );
         $dns_txt = $dns_record[0]['txt'] ?? '';
+        dump($dns_txt);
         $updated_detected = str_contains( $dns_txt, $content_expected );
         $retry_after_ttl_expired = $dns_record[0]['ttl'] ?? 300;
         if( $updated_detected ) {

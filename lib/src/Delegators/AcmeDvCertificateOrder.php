@@ -26,8 +26,8 @@ class AcmeDvCertificateOrder {
   public function getDomainNames():array {
     return $this->domain_names;
   }
-  public function getDnsChallenge(string $orderDomain): AcmeDNSChallenge {
-    return new AcmeDNSChallenge($orderDomain, $this->body->getAuthorization($orderDomain),$this->body->getAccount());
+  public function getDnsChallengeValue( string $orderDomain): AcmeDNSChallengeValue {
+    return new AcmeDNSChallengeValue($orderDomain, $this->body->getAuthorization($orderDomain),$this->body->getAccount());
   }
   public function getAcmeOrder():AcmeOrder {
     return $this->body;
