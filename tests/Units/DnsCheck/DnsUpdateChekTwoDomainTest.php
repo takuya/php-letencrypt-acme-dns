@@ -45,7 +45,7 @@ class DnsUpdateChekTwoDomainTest extends TestCase {
   
   public function test_detect_two_domain_record_updated() {
     if (!is_directly_resolve_allowed($this->domain_names[0])){
-      $this->markTestSkipped('DNS(53/udp) resolve not available: op53b');
+      $this->markTestSkipped('DNS(53/udp) resolve not available : op53b');
     }
     try {
       $mock = $this->getMockBuilder( DnsCheckUpdateWorker::class )->onlyMethods( ['selectStrategy'] )->getMock();
