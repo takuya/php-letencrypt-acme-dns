@@ -61,7 +61,7 @@ class DnsUpdateCheck {
         //
         $this->last_response = $this->resolve();
         //
-        $callback && $callback( $this->getLatestValue(), $this->getStartValue() );
+        $callback && $callback( $this->getLatestValue(), $this->getStartValue(),$cnt );
         if( $this->isChanged() ) {
           break;
         }
