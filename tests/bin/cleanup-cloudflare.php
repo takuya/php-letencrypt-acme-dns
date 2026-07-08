@@ -1,3 +1,4 @@
+#!/usr/bin/env php
 <?php
 
 require_once __DIR__.'/../../vendor/autoload.php';
@@ -27,7 +28,8 @@ function remove_junk( string $api_token, string $zone_domain ) {
   $method = new ReflectionMethod( CloudflareDNSRecord::class, 'cf_factory' );
   /** @var \Cloudflare\API\Endpoints\DNS $cf_cli */
   [$zone_id, $cf_cli] = $method->invokeArgs( null, [$api_token, $zone_domain] );
-  $ret = $cf_cli->listRecords( $zone_id, "TXT" )?->result;
+  $ret = array_merge(...array_map(fn($type)=>$cf_cli->listRecords( $zone_id, $type )?->result,['txt', 'cname', 'a']));
+  //$ret = array_merge(,$cf_cli->listRecords( $zone_id, "TXT" )?->result);
   $junk_items = [];
   foreach ( $ret as $item ) {
     if( str_contains( $item->name, 'le-test' ) || str_contains( $item->name, '_acme-challenge' ) ||str_contains( $item->name, 'phpunit' ) ) {

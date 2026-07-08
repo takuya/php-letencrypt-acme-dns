@@ -2,12 +2,8 @@
 
 namespace Takuya\Utils;
 
-use Net_DNS2_Resolver;
-use Net_DNS2_Lookups;
-use Net_DNS2_Exception;
-use function PHPUnit\Framework\matches;
-use Takuya\LEClientDNS01\DnsResolver\DnsResolverBinStr;
 use Takuya\LEClientDNS01\DnsResolver\DnsResolver;
+use Takuya\LEClientDNS01\DnsCheck\ResolveConf;
 
 if( !function_exists( __NAMESPACE__.'\dns_resolve' ) ) {
   ///**
@@ -57,13 +53,15 @@ if( !function_exists( __NAMESPACE__.'\dns_resolve' ) ) {
    * @note Not all router resolver answers SOA. using NS instead.
    * @param string $name
    * @param string $type
-   * @return string
+   * @return string rr_data: one of dns response record data, if failed empty string '' .
    * @throws \RuntimeException
    * @author takuya
    * @since  2026-06-30
    * @note  remove pear net_dns , Use my dns resolver.
    */
   function dns_resolve( string $name, string $type, $ns_server = null, $timeout = 5 ): string {
+    // TODO ローカルサーバーに対応する
+    $type = strtoupper($type);
     // 常に、ns レコードへ問い合わせる
     $ns_server = $ns_server ?? domain_ns( $name );
     $ns_server_ips = assert_ipv4_address( $ns_server ) ? [$ns_server]
@@ -71,17 +69,21 @@ if( !function_exists( __NAMESPACE__.'\dns_resolve' ) ) {
     try {
       $resolver = DnsResolver::create();
       $ret = $resolver->resolve($name,$type,$ns_server_ips[0],$timeout);
-      if ( empty($ret['ANSWER']) ) throw new \RuntimeException('record is empty');
-      return match(strtoupper($type)){
-        "SOA"=> $ret['ANSWER'][0]['rdata']['mname'],
+      if ( empty($ret['ANSWER']) && $type!='SOA' ) throw new \RuntimeException('record is empty');
+      return match($type){
+        "SOA"=> $ret['ANSWER'][0]['rdata']['mname']??$ret['AUTHORITY'][0]['rdata']['mname'],
         "TXT"=> implode("\n",array_map(fn($e)=>$e['rdata'],$ret['ANSWER'])),
         default=>$ret['ANSWER'][0]['rdata']
       };
     }catch (\RuntimeException $e){
-      return false;
+      return match( $e->getCode()){
+        DnsResolver::DNS_CONNECTION_FAILED=>false,// be cast to ''
+        default=> throw $e,
+      };
     }
   }
 }
+
 if( !function_exists( __NAMESPACE__.'\is_directly_resolve_allowed' ) ) {
   /**
    * @param string $name    Internet Domain Name
@@ -90,14 +92,34 @@ if( !function_exists( __NAMESPACE__.'\is_directly_resolve_allowed' ) ) {
    */
   function is_directly_resolve_allowed( $name, int $timeout = 1 ): bool {
     try {
-      dns_resolve( $name, "A", null, $timeout );
-      return true;
+      $ret= dns_resolve( $name, "A", null, $timeout );
+      return  !empty($ret) ;
     } catch (\Exception $e) {
       return match ( $e->getCode() ) {
-        Net_DNS2_Lookups::E_NS_SOCKET_FAILED => false,
-        Net_DNS2_Lookups::RCODE_NXDOMAIN => true,
-        default => false
+        DnsResolver::DNS_PACKECT_ID_NOT_MATCH => false,
+        default => throw $e
       };
     }
   }
 }
+if( !function_exists( __NAMESPACE__.'\is_local_dns_available' ) ) {
+  function is_local_dns_available(): bool {
+    try {
+      $server = resolve_conf()['nameserver'][0];
+      $ret= dns_resolve( 'google.com', "A", $server, 1 );
+      return  !empty($ret) ;
+    } catch (\Exception $e) {
+      return match ( $e->getCode() ) {
+        DnsResolver::DNS_PACKECT_ID_NOT_MATCH => false,
+        default => throw $e
+      };
+    }
+  }
+}
+
+if (!function_exists( __NAMESPACE__.'\resolve_conf' )  ) {
+  function resolve_conf(): array|bool {
+    return ResolveConf::parse();
+  }
+}
+

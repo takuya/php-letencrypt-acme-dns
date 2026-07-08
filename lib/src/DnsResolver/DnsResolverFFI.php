@@ -104,7 +104,8 @@ class DnsResolverFFI extends DnsResolver {
     
     $ans = [];
     foreach ( $answer_pos as $pos ) {
-      $ans[] = static::parseResponseRecord( $response, $pos );
+      [$next,$rr] = static::parseResponseRecord( $response, $pos );
+      $ans[]=$rr;
     }
     // TODO parse Additional sections.
     //dd(

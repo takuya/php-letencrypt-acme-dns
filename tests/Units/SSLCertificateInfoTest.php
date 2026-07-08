@@ -15,9 +15,9 @@ class SSLCertificateInfoTest extends TestCase {
     $info = new SSLCertificateInfo($x509);
     $this->assertStringContainsString("Google", $info->issuer['organizationName']);
     $this->assertStringContainsString('google', $info->subject['commonName']);
-  
-    $this->expectException(\InvalidArgumentException::class);
-    $info = new SSLCertificateInfo('');
+    //  assert raise Exception.
+    $this->assertGotException(fn()=>new SSLCertificateInfo(''),\InvalidArgumentException::class);
+    $this->assertGotException(fn()=>new SSLCertificateInfo('   '),\InvalidArgumentException::class);
   }
   
 }

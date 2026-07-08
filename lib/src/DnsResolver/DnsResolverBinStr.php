@@ -19,8 +19,8 @@ class DnsResolverBinStr extends DnsResolver {
     $start = microtime( true );
     $response = static::send_query( $binary_packet, $ns_server, $timeout );
     $elapsed = microtime( true ) - $start;
-    if( $response === false ) throw new \RuntimeException( 'Dns Connection failed.' );
-    if( $q['id'] != static::decodeQueryId( $response ) ) throw new \RuntimeException( 'packet id modified' );
+    if( $response === false ) throw new \RuntimeException( 'Dns Connection failed.',static::DNS_CONNECTION_FAILED );
+    if( $q['id'] != static::decodeQueryId( $response ) ) throw new \RuntimeException( 'packet id modified',static::DNS_PACKECT_ID_NOT_MATCH );
     $ret = static::parse_response( $response );
     return array_merge( ['QUERY' => [$q], 'TIME' => $elapsed], $ret );
   }
@@ -68,7 +68,54 @@ class DnsResolverBinStr extends DnsResolver {
     $adds_start_pos = $offset;
     [$adds, $offset] = static::read_response_record( $response_bin, $obj->arcount, $adds_start_pos, 2 );
     if( $offset != strlen( $response_bin ) ) throw new \RuntimeException( 'read packet failed.' );
-    return ['ANSWER' => $ans, 'AUTHORITY' => $auths, 'ADDITIONAL' => $adds, 'PACKET_SIZE' => strlen( $response_bin )];
+    // response code
+    return [
+      'ANSWER' => $ans,
+      'AUTHORITY' => $auths,
+      'ADDITIONAL' => $adds,
+      'PACKET_SIZE' => strlen( $response_bin ),
+      'STATUS'=>static::response_status($obj->q_flags),// RCODE
+      'FLAGS' => static::parse_qflags($obj->q_flags),
+    ];
+  }
+  
+  protected static function response_status( $q_flags ) {
+    return match ( $q_flags & 0x000F ) {
+      0       => 'NOERROR',
+      1       => 'FORMERR',
+      2       => 'SERVFAIL',
+      3       => 'NXDOMAIN',
+      5       => 'REFUSED',
+      default => 'unknown'
+    };
+  }
+  
+  protected static function parse_qflags( $q_flags ) {
+    /*
+    *
+    * | ビット    | マスク      | 意味                           |
+    * | ------ | -------- | ---------------------------- |
+    * | QR     | `0x8000` | 0=Query, 1=Response          |
+    * | Opcode | `0x7800` | 問い合わせ種別。通常は0(Standard Query) |
+    * | AA     | `0x0400` | Authoritative Answer         |
+    * | TC     | `0x0200` | Truncated（UDPで切り詰められた）       |
+    * | RD     | `0x0100` | Recursion Desired            |
+    * | RA     | `0x0080` | Recursion Available          |
+    * | AD     | `0x0020` | DNSSEC検証済み                   |
+    * | CD     | `0x0010` | DNSSEC検証を無効化                 |
+    * | RCODE  | `0x000F` | 応答コード                        |
+    */
+    return [
+      'qr'     => (bool)( $q_flags & 0x8000 ),
+      'opcode' => ( $q_flags >> 11 ) & 0x0F,
+      'aa'     => (bool)( $q_flags & 0x0400 ),
+      'tc'     => (bool)( $q_flags & 0x0200 ),
+      'rd'     => (bool)( $q_flags & 0x0100 ),
+      'ra'     => (bool)( $q_flags & 0x0080 ),
+      'ad'     => (bool)( $q_flags & 0x0020 ),
+      'cd'     => (bool)( $q_flags & 0x0010 ),
+      'rcode'  => $q_flags & 0x000F,
+    ];
   }
   
   protected static function build_query( $name, $type ) {

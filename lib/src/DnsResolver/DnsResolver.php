@@ -67,6 +67,8 @@ abstract class DnsResolver {
     4         => "HS",
     'default' => null,
   ];
+  const DNS_CONNECTION_FAILED=0xff;
+  const DNS_PACKECT_ID_NOT_MATCH=0xfe;
   
   public static function create( string $name = null ): DnsResolver {
     if( $name == 'ffi' && extension_loaded( 'ffi' ) ) {
@@ -74,6 +76,9 @@ abstract class DnsResolver {
     } else {
       return new DnsResolverBinStr();
     }
+  }
+  public static function resolveDomainName( string $name, string $type, string $ns_server, int $timeout = 5 ) {
+    return (static::create()->resolve($name, $type, $ns_server, $timeout));
   }
   
   public static function getTypeInt( string $type ): int {

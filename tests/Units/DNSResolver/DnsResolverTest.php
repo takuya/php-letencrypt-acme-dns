@@ -4,6 +4,7 @@ namespace DNSResolver;
 
 use tests\TestCase;
 use Takuya\LEClientDNS01\DnsResolver\DnsResolver;
+use Takuya\RandomString\RandomString;
 
 class DnsResolverTest extends TestCase {
   public function test_edns_txt_record() {
@@ -25,6 +26,20 @@ class DnsResolverTest extends TestCase {
     $this->assertArrayHasKey( 'retry', $ret['ANSWER'][0]['rdata'] );
     $this->assertArrayHasKey( 'expire', $ret['ANSWER'][0]['rdata'] );
     $this->assertArrayHasKey( 'min', $ret['ANSWER'][0]['rdata'] );
+  }
+  public function test_resolve_noexists_domain_soa_record() {
+    $resolver = DnsResolver::create( 'str' );
+    $sub = RandomString::gen(4,RandomString::LOWER);
+    $ret = $resolver->resolve( "{$sub}.google.com", 'soa', '1.1.1.1' );
+    $this->assertStringContainsString( "google.com", $ret['AUTHORITY'][0]['name'] );
+    $this->assertEquals( 'SOA', $ret['AUTHORITY'][0]['type'] );
+    $this->assertGreaterThan( 0, $ret['AUTHORITY'][0]['ttl'] );
+    $this->assertArrayHasKey( 'mname', $ret['AUTHORITY'][0]['rdata'] );
+    $this->assertArrayHasKey( 'rname', $ret['AUTHORITY'][0]['rdata'] );
+    $this->assertArrayHasKey( 'serial', $ret['AUTHORITY'][0]['rdata'] );
+    $this->assertArrayHasKey( 'retry', $ret['AUTHORITY'][0]['rdata'] );
+    $this->assertArrayHasKey( 'expire', $ret['AUTHORITY'][0]['rdata'] );
+    $this->assertArrayHasKey( 'min', $ret['AUTHORITY'][0]['rdata'] );
   }
   
   public function test_resolve_ns_record() {
@@ -101,5 +116,13 @@ class DnsResolverTest extends TestCase {
     usort( $ret_1['ANSWER'], fn( $a, $b ) => $a['rdata'] <=> $b['rdata'] );
     usort( $ret_2['ANSWER'], fn( $a, $b ) => $a['rdata'] <=> $b['rdata'] );
     $this->assertEquals( $ret_1['ANSWER'][0]['rdata'], $ret_2['ANSWER'][0]['rdata'] );
+  }
+  public function test_resolve_dns_response_code() {
+    $resolver = DnsResolver::create();
+    $sub = RandomString::gen(10,RandomString::LOWER);
+    $ret = $resolver->resolve("{$sub}.g.co",'soa','1.1.1.1');
+    $this->assertEquals('NXDOMAIN',$ret['STATUS']);;
+    $ret = $resolver->resolve(".g.co",'soa','1.1.1.1');
+    $this->assertEquals('NOERROR',$ret['STATUS']);;
   }
 }
