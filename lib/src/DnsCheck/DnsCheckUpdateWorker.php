@@ -29,6 +29,7 @@ class DnsCheckUpdateWorker {
   }
   
   protected function getSleepInterval(): int {
+    // TODO:
     return $this->sleep_interval ??= (
       $this->canResolveDirectly() || $this->canResolveUsingLocal() )
       ? $this->default_sleep_time_for_direct : $this->default_sleep_time_for_indirect;
@@ -43,7 +44,7 @@ class DnsCheckUpdateWorker {
     $this->join();
   }
   
-  protected function selectStrategy(): string {
+  public function selectStrategy(): string {
     if( $this->canResolveDirectly() ) {
       return DnsUpdateCheck::class;
     } else if( $this->canResolveUsingLocal() && $this->canLocalServerResolveSOA() ) {
@@ -53,22 +54,22 @@ class DnsCheckUpdateWorker {
     }
   }
   
-  public function addCheck( string $domain_name, string $type, ?callable $callback ): void {
+  public function addCheck( string $domain_name, string $type, ?callable $comparator=null ): void {
     $class = $this->selectStrategy();
     $checker = new $class( trim( $domain_name ), trim( $type ) );
     $checker->setLimit( intval( $this->timeout/$this->getSleepInterval() ) + 1 );
-    $this->addTask( $checker->check( $callback ) );
+    $this->addTask( $checker->checkTask( $comparator ) );
   }
   
   public function start() {
     !$this->started() && array_map( fn( $f ) => $f->start(), $this->fibers );
   }
   
-  protected function join() {
+  protected function join(): void {
     $this->joinFibers();
   }
   
-  protected function sleep() {
+  protected function sleep(): void {
     sleep( $this->getSleepInterval() );
   }
   
@@ -92,7 +93,7 @@ class DnsCheckUpdateWorker {
     return array_map( fn( $f ) => $f->getReturn(), $this->fibers );
   }
   
-  protected function finished() {
+  protected function finished(): bool {
     /** @var \Fiber $f */
     foreach ( $this->fibers as $f ) {
       if( !$f->isTerminated() ) {
@@ -107,7 +108,7 @@ class DnsCheckUpdateWorker {
     throw new \RuntimeException( 'Worker timeout' );
   }
   
-  protected function started() {
+  protected function started(): bool {
     /** @var \Fiber $f */
     return array_reduce(
       array_map( fn( $f ) => $f->isStarted(), $this->fibers ),

@@ -88,7 +88,7 @@ class DnsUpdateCheckerTest extends TestCase {
       
       $checker = $mock;
       $checker->setLimit( $checker->getStartValue()['ttl'] );
-      $fiber = $checker->check( fn( ...$args ) => $args/**dump( $args )*/);
+      $fiber = $checker->checkTask( fn( ...$args ) => $args/**dump( $args )*/);
       //
       $this->add_dns_record( $this->domain_name, $this->sample_ip );
       //

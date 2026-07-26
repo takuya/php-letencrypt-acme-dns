@@ -12,6 +12,10 @@ use function Takuya\Utils\base_domain;
 use function Takuya\Utils\parent_domain;
 use function Takuya\Utils\assert_str_is_domain;
 use function Takuya\Utils\is_wildcard_domain;
+use Takuya\LEClientDNS01\Plugin\DNS\DnsPluginStore;
+use Takuya\LEClientDNS01\Delegators\AcmeDvDNSChallenge;
+use MongoDB\BSON\PackedArray;
+use Takuya\LEClientDNS01\DnsCheck\DnsCheckUpdateWorker;
 
 class LetsEncryptAcmeDNS {
   
@@ -19,12 +23,15 @@ class LetsEncryptAcmeDNS {
   protected                     $logger;
   protected AcmeDvWrapperStatus $acme_cli;
   /** @var DnsPlugin[] */
-  protected array $plugins = [];
+  protected DnsPluginStore $plugins;
   protected string $acme_uri;
   protected array $domain_names;
+  protected CertificateWithPrivateKey $lastIssuedCert;
+  protected array $dns_challenge_values;
   
-  public function __construct( protected Account $owner, ) {
+  public function __construct( protected Account $owner ) {
     $this->setAcmeURL();
+    $this->plugins = new DnsPluginStore();
   }
   
   public function setAcmeURL( $acme_uri = LetsEncryptACMEServer::STAGING ): void {
@@ -39,7 +46,7 @@ class LetsEncryptAcmeDNS {
   }
   
   public function setDnsPlugin( DnsPlugin $dns, string $target_domain_name = 'default' ): void {
-    $this->plugins[$target_domain_name] = $dns;
+    $this->plugins->addDnsPlugin($dns,$target_domain_name);
   }
   
   public function setDomainNames( array $domain_names ) {
@@ -48,7 +55,7 @@ class LetsEncryptAcmeDNS {
   
   protected static function validateDomainName( $domain_names ) {
     empty($domain_names) && throw new \RuntimeException('DNS must not be empty.');
-    usort($domain_names, function ( $a, $b ) { return strlen($a) <=> strlen($b); });
+    usort($domain_names, fn ( $a, $b ) => strlen($a) <=> strlen($b) );
     foreach ($domain_names as $domain_name) {
       $name = $domain_name;
       if( str_contains($name, '*.') ) {
@@ -72,17 +79,31 @@ class LetsEncryptAcmeDNS {
     //
     $this->isReady();
     //
-    return $this->newOrder(
+    return $this->lastIssuedCert = $this->newOrder(
       $domain_pkey_pem ? new AsymmetricKey( $domain_pkey_pem ) : new AsymmetricKey(),
       $on_dns_wait );
   }
+  public function getLastIssuedCertificate(): CertificateWithPrivateKey {
+    return $this->lastIssuedCert;
+  }
+  public function getLastChallengeDnsValue() :array {
+    return $this->dns_challenge_values;
+  }
+  public function waitForCleanupDns(?callable $comparator=null): void {
+    $dns_cleanup_check = new DnsCheckUpdateWorker();
+    foreach ( $this->getLastChallengeDnsValue() as $domain => $value ){
+      $comparator ??= function( ...$args ) use ( $value ) {
+        $this->log(sprintf("... wait '%s' to be clean.: %s", $args[0]['now']['domain'],$args[0]['counter']));
+        return !str_contains( $args[0]['now']['rdata'], $value );
+      };
+      $dns_cleanup_check->addCheck( $domain, 'TXT', $comparator);
+    }
+    //
+    $dns_cleanup_check->waitDnsUpdate();
+  }
   public function isReady(): bool {
-    if(empty($this->domain_names)){
-      throw new \LogicException('no Domain');
-    }
-    if(empty($this->plugins)){
-      throw new \LogicException('no DNS Plugin');
-    }
+    if(empty($this->domain_names)){ throw new \LogicException('no Domain');}
+    if(empty($this->plugins)){ throw new \LogicException('no DNS Plugin'); }
     
     return true;
   }
@@ -96,80 +117,35 @@ class LetsEncryptAcmeDNS {
     $cli = new AcmeDvWrapper($this->acme_uri);
     $cli->newAccount($this->owner);
     $cli->newOrder($this->domain_names);
-    $dns_records = $cli->getDnsValues();
-    $dns_tasks = $this->createChallengeTasks($dns_records);
-    $this->processDNSTask($dns_tasks, $cli,  $on_dns_wait ?? $this->default_on_wait_callback());
+    $this->processDnsChallenge($cli);
     $cli->finalizeOrderCertificate(
-      $cli->createCSRSubject($this->domain_names)->opensslCsr(
-        $domain_pkey->privKey(\OpenSSLAsymmetricKey::class)));
+      $cli->createCSRSubject($this->domain_names)->opensslCsr( $domain_pkey->privKey(\OpenSSLAsymmetricKey::class) )
+    );
     //// Get Result.
     return new CertificateWithPrivateKey(
       $domain_pkey->privKey(), $cli->certificateLastIssued()['cert'], $cli->certificateLastIssued()['intermediate']);
   }
   
   /**
-   * @return DNSChallengeTask[]
+   * @throws \Exception
    */
-  protected function createChallengeTasks( array $challenges ):array {
-    $tasks = [];
-    $challenges_per_domain=[];
-    
-    //foreach ( $challenges as $domain => $c ) {
-    //  $challenges_per_domain[is_wildcard_domain($domain)? parent_domain($domain) : $domain][] = $c;
-    //}
-    //foreach ($challenges_per_domain as $domain => $challenges){
-    //  $tasks[$domain] = new DNSChallengeTask($challenges, $this->getDnsPlugin($domain));
-    //}
-    foreach ($challenges as $domain => $challenge){
-      $tasks[$domain] = new DNSChallengeTask([$challenge], $this->getDnsPlugin($domain));
-    }
-    return $tasks;
-  }
-  
-  public function getDnsPlugin( string $target_domain_name = 'default' ) {
-    return $this->plugins[$target_domain_name] ??
-           $this->plugins[base_domain($target_domain_name)] ?? $this->plugins['default'];
-  }
-  
-  /**
-   * @throws \Throwable
-   */
-  protected function processDNSTask ( array $challengeTasks, AcmeDvWrapper $cli , callable $on_wait_from_user ): void {
-    $fibers = [];
-    foreach ( $challengeTasks as $key => $v ) {
-      //
-      $func = function( AcmeDvWrapper $cli, DNSChallengeTask $task, callable $on_wait ): bool {
-        $task->start( fn($identifier)=> $cli->challengeAuthorization($identifier) , $on_wait );
-        return true;
-      };
-      $fibers[$key] = new \Fiber( $func );
-    }
-    // start
-    foreach ( $challengeTasks as $key => $task ) {// TODO 見通しが悪い
-      $on_wait = function( $name, $type, $content, $elapsed ) use ( $on_wait_from_user ) {
-        \Fiber::suspend( $content );
-        $on_wait_from_user( $name, $type, $content , $elapsed);
-      };
-      /** @var \Fiber[] $fibers */
-      $fibers[$key]->start( $cli , $task, $on_wait );
-    }
-    // wait
-    foreach ( $fibers as $fiber ) {
-      while ( !$fiber->isTerminated() ) {
-        $fiber->resume();
+  protected function processDnsChallenge( AcmeDvWrapper $cli): void {
+    $dnsTask = new LetsEncryptDnsTask(
+      $cli->getDnsChallenge(),
+      $this->plugins,
+      function(...$args){
+        $this->log(sprintf("... wait '%s' : %s", $d=$args[0]['now']['domain'],$args[0]['counter']));
+        $this->dns_challenge_values[$d]=$args[0]['dns_value'];
       }
-    }
+    );
+    $dnsTask->start();
+    $this->authorize($cli);
   }
-  
-  private function default_on_wait_callback():\Closure {
-    return function ( $name, $type, $content ) {
-      $message = sprintf(
-        '...wait ( %s, %s, %s...) for update TXT in SOA NS.'.PHP_EOL,
-        $name,
-        $type,
-        substr($content, '0', 5));
-      $this->log($message);
-    };
+  protected function authorize(AcmeDvWrapper $cli): void {
+    $authorize = fn($identifier) => $cli->challengeAuthorization($identifier);
+    foreach( $cli->getDnsChallenge()->getChallengeValues() as $challengeValue ){
+      $authorize($challengeValue->getChallengeDomainName());
+    }
   }
   
   public function log( $message, $level = 'debug' ):void {

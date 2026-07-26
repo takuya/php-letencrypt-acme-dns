@@ -7,12 +7,15 @@ use Takuya\RandomString\RandomString;
 use Takuya\LEClientDNS01\LetsEncryptACMEServer;
 use tests\DebugLogger;
 use Takuya\LEClientDNS01\PKey\SSLCertificateInfo;
+use Takuya\LEClientDNS01\PKey\AsymmetricKey;
+use Takuya\LEClientDNS01\LetsEncryptAcmeDNS;
+use Takuya\LEClientDNS01\Account;
+use Takuya\LEClientDNS01\DnsCheck\DnsCheckUpdateWorker;
+use function Takuya\Utils\dns_resolve;
 
 class IssueSingleDomainCertificateTest extends CertTestCase {
   protected string $email;
   protected array $domain_names;
-  protected bool $enable_authoritative_dns_check = true;
-  protected bool $enable_verbose_output = false;
   
   protected function setUp(): void {
     parent::setUp();
@@ -23,39 +26,50 @@ class IssueSingleDomainCertificateTest extends CertTestCase {
     $this->email = "admin-{$str}@{$this->base_domain}";
   }
   
-  public function test_single_domain_issue_cert() {
-    // issue cert.
+  public function test_issue_single_domain_san_cert_can_be_valid() {
+    //// issue cert.
     $dns = $this->getInstanceCFDNSPlugin();
-    $dns->enable_authoritative_check = $this->enable_authoritative_dns_check;
     $cli = $this->getInstanceLetsEncryptAcmeDNS( $this->email );
-    $this->enable_verbose_output && $cli->setLogger( new DebugLogger( 'php://stderr' ) );
+    $pkey = ( new AsymmetricKey() )->privKey();
+    $cli->setLogger( new DebugLogger( 'php://stderr' ) );
     $cli->setDomainNames( $this->domain_names );
     $cli->setAcmeURL( LetsEncryptACMEServer::STAGING );
     $cli->setDnsPlugin( $dns );
-    // request a SSL certificate.
-    $new_cert = $cli->orderNewCert();
-    // assertion
+    // request a DV-SSL certificate.
+    $new_cert = $cli->orderNewCert($pkey);
+    //// assertion
     $this->assertIsCert( $new_cert->cert() );
     $this->assertLECertificateIssued( $new_cert->cert(), $this->domain_names );
-    
-    // pkcs12 assertion
+    //
+    //// pkcs12 assertion
     $pass = RandomString::gen( 15, RandomString::LOWER );
     $pkcs = $new_cert->pkcs12( $pass );
     $this->assertIsPKCS12( $pkcs, $pass );
     $this->assertPKCS12_PrivKeyMatched( $new_cert->privKey(), $pkcs, $pass );
     $this->assertPKCS12_CertMatched( $new_cert->cert(), $pkcs, $pass );
-
+    // ------------------
+    // clean up DNS and assertion.
+    // ------------------
+    $cli->waitForCleanupDns();
+    foreach ($cli->getLastChallengeDnsValue() as $d => $v){
+      $ret = dns_resolve($d,'TXT');
+      $this->assertStringNotContainsString($v,$ret);
+    }
+    // ------------------
     // renew certificate
-    $renew_cert = $cli->orderNewCert( $new_cert->privKey() );
-
-
-    // assert renewed.
+    // ------------------
+    $cert_pkey = $new_cert->privKey();
+    $cli->orderNewCert($cert_pkey);
+    $renew_cert = $cli->getLastIssuedCertificate();
     $this->assertIsCert( $renew_cert->cert() );
     $this->assertNotEquals(
       (new SSLCertificateInfo($renew_cert->fullChain()))->serialNumber,
       (new SSLCertificateInfo($new_cert->fullChain()))->serialNumber
     );
-    $this->assertLECertificateIssued( $renew_cert->cert(), $this->domain_names );
+    $this->assertEquals(
+      (new SSLCertificateInfo($renew_cert->fullChain()))->extensions['subjectAltName'],
+      (new SSLCertificateInfo($new_cert->fullChain()))->extensions['subjectAltName'],
+    );
   }
   
 }

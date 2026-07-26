@@ -27,12 +27,12 @@ class DnsUpdateCheck {
     return ['domain' => $this->domain_name, 'type' => $this->type, 'rdata' => $ret];
   }
   
-  public function check( ?callable $callback ): \Fiber {
-    return $this->waitWithPolling( $callback );
+  public function checkTask( ?callable $comparator ): \Fiber {
+    return $this->waitWithPolling( $comparator );
   }
   
-  protected function waitWithPolling( ?callable $callback ): \Fiber {
-    return $this->pollingDnsWorker( $callback );
+  protected function waitWithPolling( ?callable $comparator ): \Fiber {
+    return $this->pollingDnsWorker( $comparator );
   }
   
   public function getLimit(): int {
@@ -54,15 +54,15 @@ class DnsUpdateCheck {
     return $this->getLatestValue()['rdata'] != $this->getStartValue()['rdata'];
   }
   
-  protected function pollingDnsWorker( ?callable $callback ): \Fiber {
-    return new \Fiber( function() use ( $callback ) {
+  protected function pollingDnsWorker( ?callable $comparator ): \Fiber {
+    $comparator ??=fn(...$args) => $this->isChanged();
+    return new \Fiber( function() use ( $comparator ) {
       for ($cnt = 0; $cnt <= $this->getLimit(); $cnt++) {
         \Fiber::suspend();
         //
         $this->last_response = $this->resolve();
         //
-        $callback && $callback( $this->getLatestValue(), $this->getStartValue(),$cnt );
-        if( $this->isChanged() ) {
+        if( $comparator( ['now' =>$this->getLatestValue(), 'started' =>$this->getStartValue(), 'counter' =>$cnt] ) ) {
           break;
         }
       }

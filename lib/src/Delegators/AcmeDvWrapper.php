@@ -52,20 +52,16 @@ class AcmeDvWrapper {
     $this->updateState(AcmeDvWrapperStatus::ACCOUNT_REGISTERED);
   }
   public function newOrder ( array $domain_names ): void {
-    $order = $this->acme_cli->newOrder($this->acme_account,$domain_names );
-    $this->order = new AcmeDvCertificateOrder($order);
+    $acme_order = $this->acme_cli->newOrder($this->acme_account,$domain_names );
+    $this->order = new AcmeDvCertificateOrder($acme_order);
     $this->order->setOrderDomains($domain_names);
     $this->updateState(AcmeDvWrapperStatus::ORDERED);
   }
   /**
-   * @return AcmeDNSChallengeValue[]
+   * @return AcmeDvDNSChallenge
    */
-  public function getDnsValues():array {
-    $domain_txt_values = [];
-    foreach ( $this->order->getDomainNames() as $orderDomain ) {
-      $domain_txt_values[$orderDomain] = $this->order->getDnsChallengeValue($orderDomain);
-    }
-    return $domain_txt_values;
+  public function getDnsChallenge():AcmeDvDNSChallenge {
+    return new AcmeDvDNSChallenge($this->order);
   }
   public function challengeAuthorization(string $domain_name):void {
     $this->acme_cli->challengeAuthorization($this->order->getAcmeOrder(), $domain_name);

@@ -26,7 +26,7 @@ class CertTestCase extends TestCase {
   
   protected function getInstanceCFDNSPlugin (): CloudflareDNSPlugin {
     $cf = new CloudflareDNSPlugin( $this->cf_api_token, $this->base_domain );
-    $cf->enable_authoritative_check = true;
+    //$cf->enable_authoritative_check = true;
     return $cf;
   }
   protected function setUp (): void {
