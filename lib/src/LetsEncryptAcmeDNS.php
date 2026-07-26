@@ -6,15 +6,10 @@ use Takuya\LEClientDNS01\PKey\AsymmetricKey;
 use Takuya\LEClientDNS01\Plugin\DNS\DNSPlugin;
 use Takuya\LEClientDNS01\Delegators\AcmeDvWrapper;
 use Takuya\LEClientDNS01\Delegators\AcmeDvWrapperStatus;
-use Takuya\LEClientDNS01\Delegators\AcmeDNSChallengeValue;
 use Takuya\LEClientDNS01\PKey\CertificateWithPrivateKey;
-use function Takuya\Utils\base_domain;
 use function Takuya\Utils\parent_domain;
 use function Takuya\Utils\assert_str_is_domain;
-use function Takuya\Utils\is_wildcard_domain;
 use Takuya\LEClientDNS01\Plugin\DNS\DnsPluginStore;
-use Takuya\LEClientDNS01\Delegators\AcmeDvDNSChallenge;
-use MongoDB\BSON\PackedArray;
 use Takuya\LEClientDNS01\DnsCheck\DnsCheckUpdateWorker;
 
 class LetsEncryptAcmeDNS {

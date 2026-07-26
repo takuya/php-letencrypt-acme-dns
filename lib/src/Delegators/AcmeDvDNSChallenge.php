@@ -2,8 +2,6 @@
 
 namespace Takuya\LEClientDNS01\Delegators;
 
-use Takuya\LEClientDNS01\Acme\Resources\AcmeOrder;
-
 class AcmeDvDNSChallenge {
   
   /**

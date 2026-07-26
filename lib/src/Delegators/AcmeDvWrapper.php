@@ -7,9 +7,6 @@ use Takuya\LEClientDNS01\Acme\Resources\AcmeDirectory;
 use Takuya\LEClientDNS01\Acme\AcmeClient;
 use Takuya\LEClientDNS01\Account;
 use Takuya\LEClientDNS01\Acme\AcmeAccount;
-use Takuya\LEClientDNS01\Acme\Resources\AcmeOrder;
-use Takuya\LEClientDNS01\Acme\Resources\AcmeChallengeTypeEnum;
-use Takuya\LEClientDNS01\Acme\Resources\AcmeAuthorizationChallenge;
 use Takuya\LEClientDNS01\PKey\CSRSubject;
 use Takuya\LEClientDNS01\Acme\X509SSLCertificate;
 

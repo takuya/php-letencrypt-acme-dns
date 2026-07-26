@@ -2,8 +2,6 @@
 
 namespace Takuya\LEClientDNS01\DnsResolver\Binary;
 
-use MongoDB\BSON\PackedArray;
-
 class BinDecode {
   public static function uint32( string $bin_str ): int {
     if( strlen( $bin_str ) != 4 ) throw new \InvalidArgumentException( 'must be 4 byte.' );

@@ -2,7 +2,6 @@
 
 namespace Takuya\LEClientDNS01\Delegators;
 
-use Takuya\LEClientDNS01\Acme\Resources\AcmeAuthorizationChallenge;
 use Takuya\LEClientDNS01\Acme\Http\Rs256JwsSigner;
 use function Takuya\Utils\base64_url_encode;
 use Takuya\LEClientDNS01\Acme\AcmeAccount;

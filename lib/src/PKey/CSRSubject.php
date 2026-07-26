@@ -4,8 +4,6 @@ namespace Takuya\LEClientDNS01\PKey;
 
 use Takuya\RandomString\RandomString;
 use OpenSSLCertificateSigningRequest;
-use function PHPUnit\Framework\isString;
-use function PHPUnit\Framework\fileExists;
 
 class CSRSubject {// ドメイン名証明書用のCSRなので、CSRではなく、 DvCsrとかにするべきかもね。EVのCSRとは根本的に異なるわけで。
   /**

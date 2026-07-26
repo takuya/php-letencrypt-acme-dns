@@ -2,7 +2,7 @@
 
 namespace Takuya\LEClientDNS01\DnsResolver;
 
-use \FFI;
+use FFI;
 
 class DnsResolverFFI extends DnsResolver {
   
